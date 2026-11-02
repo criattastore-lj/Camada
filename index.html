@@ -1,0 +1,1635 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Camada">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<title>Camada Operações</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: painel de oficina — menu lateral fixo, área de trabalho com cartões de leitura rápida e tabelas operáveis. */
+:root {
+  --bg: #F1F3F6; --surface: #FFFFFF; --surface-2: #F7F8FA; --ink: #141821; --muted: #5B6375; --line: #DCE0E7;
+  --accent: #2F4BFF; --accent-ink: #FFFFFF; --accent-soft: #E6EAFF;
+  --good: #1D7A50; --good-soft: #E1F3EA; --warn: #A15C00; --warn-soft: #FFF1DC; --bad: #B3261E; --bad-soft: #FDE7E5;
+  --chart-a: #2F4BFF; --chart-b: #AEB5C3; --chart-c: #F26B2A;
+  --f-display: 'Chakra Petch', 'Arial Narrow', system-ui, sans-serif;
+  --f-body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1116; --surface: #171A21; --surface-2: #1C2029; --ink: #E7EAF0; --muted: #9AA2B3; --line: #2A2F3A;
+    --accent: #7C8FFF; --accent-ink: #0F1116; --accent-soft: #1E2545;
+    --good: #5FD39C; --good-soft: #15291F; --warn: #F2B35A; --warn-soft: #2E2312; --bad: #FF8A80; --bad-soft: #341716;
+    --chart-a: #7C8FFF; --chart-b: #4A5163; --chart-c: #FF8A4C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1116; --surface: #171A21; --surface-2: #1C2029; --ink: #E7EAF0; --muted: #9AA2B3; --line: #2A2F3A;
+  --accent: #7C8FFF; --accent-ink: #0F1116; --accent-soft: #1E2545;
+  --good: #5FD39C; --good-soft: #15291F; --warn: #F2B35A; --warn-soft: #2E2312; --bad: #FF8A80; --bad-soft: #341716;
+  --chart-a: #7C8FFF; --chart-b: #4A5163; --chart-c: #FF8A4C; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num, .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+h1, h2, h3 { margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-family: var(--f-display); font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+h2 { font-size: 16px; font-weight: 600; }
+.app { display: flex; min-height: 100vh; }
+.side { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--line); padding: 18px 12px; padding-left: max(12px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.logo { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; }
+.logo-mark { width: 26px; height: 26px; display: grid; grid-template-rows: repeat(5, 1fr); gap: 2px; }
+.logo-mark span { background: var(--accent); border-radius: 2px; }
+.logo-mark span:nth-child(1) { width: 40%; justify-self: center; } .logo-mark span:nth-child(2) { width: 70%; justify-self: center; } .logo-mark span:nth-child(4) { width: 85%; justify-self: center; }
+.logo b { font-family: var(--f-display); font-size: 18px; } .logo small { display: block; font-family: var(--f-mono); font-size: 10px; color: var(--muted); margin-top: -3px; }
+.nav-btn { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); text-align: left; font-weight: 500; }
+.nav-btn:hover { color: var(--ink); background: var(--surface-2); }
+.nav-btn[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+.nav-btn .dot { min-width: 20px; height: 20px; border-radius: 999px; font-size: 11px; display: inline-grid; place-items: center; font-family: var(--f-mono); padding: 0 6px; }
+.dot.bad { background: var(--bad); color: #fff; } .dot.warn { background: var(--warn); color: #fff; }
+.mode { margin-top: auto; font-size: 12px; color: var(--muted); padding: 10px; border-top: 1px solid var(--line); }
+main { flex: 1; min-width: 0; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+.head p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.sm { min-height: 32px; padding: 0 10px; font-size: 13px; font-weight: 500; }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.card > h2 + * { margin-top: 12px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.kpi > span { font-size: 12px; color: var(--muted); }
+.kpi b { font-family: var(--f-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.kpi > small { font-size: 12px; color: var(--muted); }
+.kpi.hero { border-color: var(--accent); }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+.bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); } .pill.warn { background: var(--warn-soft); color: var(--warn); } .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.neutral { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.alerts { display: flex; flex-direction: column; gap: 8px; }
+.alert { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); flex-wrap: wrap; }
+.alert.bad { border-color: var(--bad); background: var(--bad-soft); } .alert.warn { border-color: var(--warn); background: var(--warn-soft); }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 600; font-size: 12px; color: var(--muted); padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; } td.num { white-space: nowrap; }
+.sw { width: 16px; height: 16px; border-radius: 999px; border: 1px solid var(--line); display: inline-block; vertical-align: middle; flex-shrink: 0; }
+.empty { text-align: center; padding: 28px 16px; color: var(--muted); display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.empty b { color: var(--ink); font-size: 15px; }
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.prod { display: flex; flex-direction: column; gap: 12px; }
+.prod-top { display: flex; gap: 12px; align-items: flex-start; }
+.thumb { width: 84px; height: 84px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); object-fit: cover; flex-shrink: 0; display: grid; place-items: center; color: var(--muted); font-size: 11px; text-align: center; overflow: hidden; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
+.kv span:nth-child(odd) { color: var(--muted); } .kv span:nth-child(even) { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.kv .total { color: var(--ink) !important; font-weight: 600; border-top: 1px solid var(--line); padding-top: 4px; }
+.chan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chan div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface-2); display: flex; flex-direction: column; gap: 2px; }
+.chan small { font-size: 11px; color: var(--muted); }
+.chan b { font-family: var(--f-mono); font-size: 16px; font-weight: 500; }
+.chan em { font-style: normal; font-size: 11px; color: var(--good); font-family: var(--f-mono); }
+.margin-in { width: 64px; min-height: 30px; border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; background: var(--surface); text-align: right; font-family: var(--f-mono); }
+dialog { border: 1px solid var(--line); border-radius: 16px; padding: 0; background: var(--surface); color: var(--ink); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); }
+dialog::backdrop { background: rgba(10, 12, 16, .5); }
+dialog form { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label, .lbl { font-size: 12px; font-weight: 600; color: var(--muted); }
+.in { width: 100%; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; background: var(--surface-2); }
+textarea.in { padding: 8px 10px; min-height: 64px; }
+.in:focus { border-color: var(--accent); outline: none; }
+.fg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.fg3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.fil-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 90px 36px; gap: 8px; align-items: center; }
+.deal-price { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; align-items: baseline; }
+.color-avail table { font-size: 12px; min-width: 0; width: 100%; } .color-avail td, .color-avail th { padding: 6px 6px; white-space: normal; } .color-avail th { line-height: 1.2; }
+@media (max-width: 560px) { .color-avail td, .color-avail th { padding: 5px 3px; font-size: 11px; } .color-avail .btn.sm { padding: 0 8px; min-height: 30px; } .color-avail .pill { font-size: 10px; padding: 2px 5px; } } .color-avail tr.cur td { background: var(--accent-soft, rgba(80,90,255,.08)); }
+.client-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.client-total b { font-family: 'Chakra Petch', sans-serif; font-size: 24px; } .client-total small { flex-basis: 100%; color: var(--muted); }
+dialog.wide { width: min(800px, calc(100vw - 32px)); }
+.seg { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 4px; flex-wrap: wrap; }
+.seg button { flex: 1 1 140px; min-height: 38px; border: 0; border-radius: 9px; background: transparent; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.sec-t { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+.deal-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); }
+.deal-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.deal-top .thumb { width: 56px; height: 56px; }
+.deal-top select { flex: 1 1 180px; min-width: 0; width: auto; }
+.deal-top .q { width: 72px; } .deal-top .pr { width: 112px; }
+.deal-info { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.color-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) 92px; gap: 8px; align-items: center; font-size: 12px; }
+.color-row select { min-height: 34px; font-size: 13px; }
+@media (max-width: 560px) { .color-row { grid-template-columns: minmax(0, 1fr); } .fil-row { grid-template-columns: minmax(0, 1fr) 80px 36px; } .fil-row .part { grid-column: 1 / -1; } }
+.ord-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 108px 36px; gap: 6px; align-items: center; }
+.plan-row { display: grid; grid-template-columns: minmax(0, 1fr) 100px 140px 36px; gap: 8px; align-items: center; }
+.x { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.thumb img[data-photo] { cursor: zoom-in; }
+a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+#lb { width: min(920px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; }
+.lb-wrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+.lb-img { background: #111; display: grid; place-items: center; min-height: 280px; }
+.lb-img img { width: 100%; height: 100%; max-height: 80vh; object-fit: contain; display: block; }
+.lb-side { padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.lb-side textarea { min-height: 120px; resize: vertical; font: inherit; }
+@media (max-width: 700px) { .lb-wrap { grid-template-columns: minmax(0, 1fr); } .lb-img img { max-height: 46vh; } }
+.notif { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); border-left: 4px solid var(--line); }
+.notif.good { border-left-color: var(--good, #1a9b5b); } .notif.warn { border-left-color: var(--warn, #c98a00); } .notif.bad { border-left-color: var(--bad, #d13c3c); }
+.notif-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.notif-b b { font-size: 14px; } .notif-b .row { margin-top: 6px; gap: 6px; }
+.notif .thumb { width: 48px; height: 48px; }
+.notifs { display: flex; flex-direction: column; gap: 10px; }
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.msgs { display: flex; flex-direction: column; gap: 10px; max-height: 58vh; overflow-y: auto; padding: 4px; }
+.msg { align-self: flex-start; max-width: min(560px, 92%); background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px 12px 12px 4px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.msg.me { align-self: flex-end; border-radius: 12px 12px 4px 12px; background: var(--accent-soft, rgba(80,90,255,.10)); }
+.msg.auto { align-self: center; background: transparent; border-style: dashed; max-width: 100%; }
+.msg-h { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.msg-h b { color: var(--ink); font-size: 12px; }
+.msg-b { font-size: 14px; white-space: normal; overflow-wrap: anywhere; }
+.composer { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.composer textarea { min-height: 64px; resize: vertical; font: inherit; }
+.composer .row select { width: auto; flex: 1 1 150px; min-width: 0; }
+.who { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; padding: 10px 8px 0; border-top: 1px solid var(--line); margin-top: 8px; }
+.who select { min-height: 32px; font-size: 12px; }
+body.auth .side { display: none; }
+.login { margin-top: 8vh; } .login .logo { margin: 0; padding: 0; display: flex !important; }
+.onboard { max-width: 520px; margin: 40px auto; display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 860px) { .who { display: none; } }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; z-index: 50; font-size: 13px; max-width: calc(100vw - 32px); }
+.banner { padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); font-size: 13px; }
+.mtask { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mtask:last-child { border-bottom: 0; }
+.mtask small { display: block; color: var(--muted); font-size: 12px; }
+@media (max-width: 860px) {
+  .app { flex-direction: column; }
+  .side { width: auto; height: auto; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; flex-direction: row; overflow-x: auto; padding: 8px; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); border-right: 0; border-bottom: 1px solid var(--line); gap: 4px; }
+  .logo, .mode { display: none; }
+  .nav-btn { white-space: nowrap; flex-shrink: 0; }
+  .g2, .g3 { grid-template-columns: minmax(0, 1fr); }
+  .fg3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .plan-row { grid-template-columns: minmax(0, 1fr) 80px 36px; }
+  .plan-row .plan-max { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) { .fg { grid-template-columns: minmax(0, 1fr); } .chan { grid-template-columns: minmax(0, 1fr); } }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+</head>
+<body>
+
+
+<div class="app">
+  <nav class="side" id="nav" aria-label="Seções">
+    <div class="logo"><span class="logo-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span><span><b>camada</b><small>operações</small></span></div>
+  </nav>
+  <main><div class="wrap" id="view"><div class="empty"><b>Carregando…</b></div></div></main>
+</div>
+<dialog id="dlg"></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+  // ================= Utilidades =================
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+  const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const brl = (n) => (Number(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const n1 = (n, d) => (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  const pct = (n) => (Number(n) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
+  const num = (v) => { if (typeof v === 'number') return isFinite(v) ? v : 0; let s = String(v == null ? '' : v).trim().replace(/[^\d,.\-]/g, ''); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const x = parseFloat(s); return isNaN(x) ? 0 : x; };
+  const grams = (g) => Math.abs(g) >= 1000 ? n1(g / 1000, 2) + ' kg' : n1(g, Math.abs(g) < 10 && g % 1 ? 1 : 0) + ' g';
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const fmtDate = (s) => { if (!s) return '—'; const [y, m, d] = String(s).slice(0, 10).split('-'); return d + '/' + m + '/' + y.slice(2); };
+  const monthKey = (s) => String(s || '').slice(0, 7);
+  const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const monthLabel = (k) => { const [y, m] = k.split('-'); return MONTHS[+m - 1] + '/' + y.slice(2); };
+  const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  let toastT;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2800); }
+
+  // ================= Configurações padrão =================
+  const DEFAULT_SETTINGS = {
+    kwh: 0.95, helperHour: 15, margin: 30, failPct: 5, defaultCpg: 0.12, packaging: 2.5,
+    ml: { pct: 13, fixedUnder: 6.5, threshold: 79, freeShip: 20 },
+    shopee: { tiers: [{ upTo: 79.99, pct: 20, fixed: 4.5 }, { upTo: 99.99, pct: 14, fixed: 16 }, { upTo: 199.99, pct: 14, fixed: 20 }, { upTo: 1e9, pct: 14, fixed: 26 }] },
+    tiktok: { under: 50, pctUnder: 10, fixedUnder: 4, pctOver: 6, fixedOver: 6, shipProgram: true, shipPct: 6, shipCap: 50 },
+    instagram: { payPct: 0, fixed: 0 }, site: { payPct: 4.99, fixed: 0 }, vendedor: { payPct: 0, fixed: 0, commission: 10 }
+  };
+  const CHANNELS = [
+    { id: 'ml', name: 'Mercado Livre', short: 'ML' },
+    { id: 'shopee', name: 'Shopee', short: 'Shopee' },
+    { id: 'tiktok', name: 'TikTok Shop', short: 'TikTok' },
+    { id: 'instagram', name: 'Instagram (encomenda)', short: 'Instagram' },
+    { id: 'site', name: 'Site próprio', short: 'Site' },
+    { id: 'vendedor', name: 'Vendedor', short: 'Vendedor' },
+    { id: 'direto', name: 'WhatsApp / venda direta', short: 'Direto' }
+  ];
+  const ORDER_CH = ['instagram', 'site', 'vendedor', 'direto'];
+  const ORDER_ST = [['orcamento', 'Orçamento'], ['confirmada', 'Confirmada'], ['producao', 'Em produção'], ['pronta', 'Pronta'], ['entregue', 'Entregue'], ['cancelada', 'Cancelada']];
+  const EXP_CATS = ['Embalagens', 'Anúncios', 'Ferramentas e peças', 'Frete e envio', 'Impostos (DAS)', 'Assinaturas e apps', 'Manutenção', 'Outros'];
+  const MATERIALS = ['PLA', 'PLA Silk', 'PLA Matte', 'PETG', 'TPU', 'ABS', 'ASA', 'Outro'];
+
+  // ================= Armazenamento =================
+  const COLLS = ['machines', 'maintenance', 'filaments', 'purchases', 'products', 'productions', 'sales', 'expenses', 'sellers', 'orders', 'messages', 'members'];
+  const S = { settings: null, ready: false };
+  COLLS.forEach((c) => (S[c] = []));
+  let db = null, assets = null, mode = 'local';
+  const LKEY = 'camada_ops_v1';
+  function localLoad() { try { return JSON.parse(localStorage.getItem(LKEY)) || {}; } catch (e) { return {}; } }
+  function localSave() { try { const o = { settings: S.settings }; COLLS.forEach((c) => (o[c] = S[c])); localStorage.setItem(LKEY, JSON.stringify(o)); } catch (e) { toast('Não foi possível salvar neste navegador'); } }
+
+  async function saveDoc(coll, obj) {
+    obj = Object.assign({}, obj); if (!obj.id) obj.id = uid();
+    const id = obj.id; const body = Object.assign({}, obj); delete body.id;
+    if (mode === 'cloud') {
+      if (coll === 'members') return saveMember(obj);
+      const { error } = await sb.from('docs').upsert({ id, coll, data: body, updated_by: ME.id, updated_at: new Date().toISOString() });
+      if (error) { toast(navigator.onLine === false ? 'Sem internet: não foi salvo. Tente de novo quando conectar.' : 'Não foi possível salvar. Tente de novo.'); throw error; }
+      localPut(coll, obj); scheduleRender();
+    } else if (mode === 'db') {
+      try { await db.collection(coll).doc(id).set(body); } catch (e) { toast(e.code === 'quota_exceeded' ? 'Limite de armazenamento atingido' : 'Não foi possível salvar. Tente de novo.'); throw e; }
+    } else {
+      const arr = S[coll]; const i = arr.findIndex((x) => x.id === id);
+      if (i >= 0) arr[i] = obj; else arr.push(obj); localSave(); scheduleRender();
+    }
+    return obj;
+  }
+  async function delDoc(coll, id) {
+    if (mode === 'cloud') {
+      const { error } = coll === 'members' ? await sb.from('profiles').delete().eq('id', id) : await sb.from('docs').delete().eq('id', id);
+      if (error) { toast('Não foi possível excluir'); throw error; }
+      S[coll] = S[coll].filter((x) => x.id !== id); scheduleRender();
+    } else if (mode === 'db') { try { await db.collection(coll).doc(id).delete(); } catch (e) { toast('Não foi possível excluir'); throw e; } }
+    else { S[coll] = S[coll].filter((x) => x.id !== id); localSave(); scheduleRender(); }
+  }
+  async function saveSettings(obj) {
+    S.settings = obj;
+    if (mode === 'cloud') { const { error } = await sb.from('docs').upsert({ id: 'settings', coll: 'config', data: obj, updated_by: ME.id, updated_at: new Date().toISOString() }); if (error) toast('Não foi possível salvar os ajustes'); scheduleRender(); }
+    else if (mode === 'db') { try { await db.doc('config/settings').set(obj); } catch (e) { toast('Não foi possível salvar os ajustes'); } }
+    else { localSave(); scheduleRender(); }
+  }
+  const set = () => Object.assign({}, DEFAULT_SETTINGS, S.settings || {}, {
+    ml: Object.assign({}, DEFAULT_SETTINGS.ml, (S.settings || {}).ml),
+    shopee: Object.assign({}, DEFAULT_SETTINGS.shopee, (S.settings || {}).shopee),
+    tiktok: Object.assign({}, DEFAULT_SETTINGS.tiktok, (S.settings || {}).tiktok),
+    instagram: Object.assign({}, DEFAULT_SETTINGS.instagram, (S.settings || {}).instagram),
+    site: Object.assign({}, DEFAULT_SETTINGS.site, (S.settings || {}).site),
+    vendedor: Object.assign({}, DEFAULT_SETTINGS.vendedor, (S.settings || {}).vendedor)
+  });
+
+  // ================= Nuvem própria (Supabase): login, salvamento e tempo real =================
+  const CFG = window.APP_CONFIG || {};
+  const CLOUD = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && !/xxxx|COLE/i.test(CFG.SUPABASE_URL + CFG.SUPABASE_ANON_KEY) && window.supabase);
+  let sb = null, sbUser = null, profilesLoaded = false, docsLoading = false, connState = '', authView = 'login', recovering = false;
+  let remember = true; try { remember = localStorage.getItem('camada_remember') !== '0'; } catch (e) {}
+  const makeClient = (rem) => window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: rem ? window.localStorage : window.sessionStorage, storageKey: 'camada-auth' } });
+  function localPut(coll, obj) { const arr = S[coll]; const i = arr.findIndex((x) => x.id === obj.id); if (i >= 0) arr[i] = obj; else arr.push(obj); }
+  const fromProfile = (r) => ({ id: r.id, role: r.role, nick: r.nick, approved: r.approved, owner: r.owner, sellerId: r.seller_id || '', joinedAt: r.created_at });
+  async function loadProfiles() {
+    const { data, error } = await sb.from('profiles').select('*');
+    if (!error) { S.members = (data || []).map(fromProfile); profilesLoaded = true; }
+    const m = myMember(); ME.isOwner = !!(m && m.owner);
+    if (m && m.approved && !S.ready && !docsLoading) loadDocs();
+    scheduleRender();
+  }
+  async function loadDocs() {
+    docsLoading = true;
+    try {
+      const fresh = {}; COLLS.forEach((c) => { if (c !== 'members') fresh[c] = []; });
+      let from = 0, settings = S.settings;
+      for (;;) {
+        const { data, error } = await sb.from('docs').select('id,coll,data').order('id').range(from, from + 999);
+        if (error) throw error;
+        (data || []).forEach((r) => { if (r.coll === 'config' && r.id === 'settings') settings = r.data; else if (fresh[r.coll]) fresh[r.coll].push(Object.assign({}, r.data, { id: r.id })); });
+        if (!data || data.length < 1000) break; from += 1000;
+      }
+      Object.keys(fresh).forEach((c) => (S[c] = fresh[c])); S.settings = settings || null; S.ready = true;
+    } catch (e) { toast('Não foi possível carregar os dados. Verifique a internet.'); }
+    docsLoading = false; scheduleRender();
+  }
+  function applyDoc(p) {
+    if (p.eventType === 'DELETE') { const id = p.old && p.old.id; if (!id) return; COLLS.forEach((c) => { if (c !== 'members') S[c] = S[c].filter((x) => x.id !== id); }); }
+    else { const r = p.new; if (!r) return; if (r.coll === 'config' && r.id === 'settings') S.settings = r.data; else if (S[r.coll] && r.coll !== 'members') localPut(r.coll, Object.assign({}, r.data, { id: r.id })); }
+    scheduleRender();
+  }
+  function subscribe() {
+    sb.channel('camada-tempo-real')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'docs' }, applyDoc)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadProfiles())
+      .subscribe((status) => {
+        const was = connState; connState = status;
+        if (status === 'SUBSCRIBED' && was && was !== 'SUBSCRIBED') { loadProfiles(); if (S.ready) loadDocs(); }
+        renderNav();
+      });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && sbUser) { loadProfiles(); if (S.ready) loadDocs(); } });
+    window.addEventListener('online', () => { if (sbUser) { loadProfiles(); if (S.ready) loadDocs(); } });
+  }
+  async function startSession(user) {
+    sbUser = user; mode = 'cloud'; ME = { id: user.id, isOwner: false, name: (user.user_metadata && user.user_metadata.nick) || '' };
+    subscribe(); await loadProfiles();
+  }
+  async function saveMember(obj) {
+    const ex = S.members.find((m) => m.id === obj.id);
+    const row = { nick: obj.nick || '', role: obj.role, seller_id: obj.sellerId || '' };
+    if (obj.approved !== undefined && ex && obj.approved !== ex.approved) row.approved = !!obj.approved;
+    const { error } = ex ? await sb.from('profiles').update(row).eq('id', obj.id) : await sb.from('profiles').insert(Object.assign({ id: obj.id, approved: false, owner: false }, row));
+    if (error) { toast('Não foi possível salvar: ' + (error.message || 'sem permissão')); throw error; }
+    await loadProfiles(); return obj;
+  }
+  async function bootCloud() {
+    sb = makeClient(remember);
+    sb.auth.onAuthStateChange((ev, session) => {
+      if (ev === 'PASSWORD_RECOVERY') { recovering = true; authView = 'nova-senha'; mode = 'login'; render(); }
+      if (ev === 'SIGNED_OUT') location.reload();
+    });
+    const { data } = await sb.auth.getSession();
+    if (data && data.session && !recovering) await startSession(data.session.user);
+    else { mode = 'login'; render(); }
+  }
+  function vLogin() {
+    const f = (id, label, type, extra) => '<div class="field"><label for="' + id + '">' + label + '</label><input class="in" id="' + id + '" type="' + type + '" ' + (extra || '') + '></div>';
+    let h = '<div class="card onboard login"><div class="row" style="gap:10px;flex-wrap:nowrap">' + $('#nav .logo').outerHTML + '</div>';
+    if (authView === 'nova-senha') return h + '<h1>Criar nova senha</h1>' + f('l-pass', 'Nova senha (mínimo 6 caracteres)', 'password', 'autocomplete="new-password"') + '<button class="btn primary" id="l-newpass">Salvar nova senha</button></div>';
+    if (authView === 'esqueci') return h + '<h1>Esqueci minha senha</h1><p class="hint">Enviaremos um link para você criar uma senha nova.</p>' + f('l-email', 'E-mail', 'email', 'autocomplete="email"') + '<button class="btn primary" id="l-reset">Enviar link</button><button class="btn ghost" data-auth="login">Voltar para o login</button></div>';
+    const signup = authView === 'cadastro';
+    h += '<h1>' + (signup ? 'Criar conta' : 'Entrar') + '</h1>' + (signup ? '<p class="hint">Depois de criar a conta, a gestão aprova seu acesso.</p>' : '');
+    if (signup) h += f('l-nick', 'Como quer ser chamado(a)', 'text', 'maxlength="40" autocomplete="nickname"') + '<div class="field"><span class="lbl">Função</span><div class="seg" role="group" aria-label="Função">' + [['vendas', 'Vendas'], ['producao', 'Produção']].map(([k, l]) => '<button type="button" data-obrole="' + k + '" aria-pressed="' + (obRole === k) + '">' + l + '</button>').join('') + '</div></div>';
+    h += f('l-email', 'E-mail', 'email', 'autocomplete="email" inputmode="email"') + f('l-pass', 'Senha' + (signup ? ' (mínimo 6 caracteres)' : ''), 'password', 'autocomplete="' + (signup ? 'new-password' : 'current-password') + '"');
+    h += '<label class="row" style="gap:8px;font-size:14px;flex-wrap:nowrap"><input type="checkbox" id="l-remember"' + (remember ? ' checked' : '') + ' style="width:18px;height:18px"> Manter conectado neste aparelho</label>';
+    h += '<button class="btn primary" id="' + (signup ? 'l-signup' : 'l-login') + '">' + (signup ? 'Criar conta' : 'Entrar') + '</button>';
+    h += signup ? '<button class="btn ghost" data-auth="login">Já tenho conta</button>' : '<button class="btn ghost" data-auth="cadastro">Criar conta</button><button class="btn ghost" data-auth="esqueci">Esqueci minha senha</button>';
+    h += '<p class="hint" id="l-msg" role="status"></p></div>';
+    return h;
+  }
+  const authMsg = (t) => { const m = $('#l-msg'); if (m) m.textContent = t; else toast(t); };
+  const authErr = (e) => { const m = String((e && e.message) || ''); return /Invalid login/i.test(m) ? 'E-mail ou senha incorretos.' : /Email not confirmed/i.test(m) ? 'Confirme seu e-mail pelo link que enviamos antes de entrar.' : /already registered/i.test(m) ? 'Este e-mail já tem conta. Use "Entrar".' : /Password should be/i.test(m) ? 'A senha precisa ter pelo menos 6 caracteres.' : /fetch|network/i.test(m) ? 'Sem conexão com a internet.' : (m || 'Não foi possível concluir.'); };
+  async function authAction(id, btn) {
+    const email = ($('#l-email') || {}).value, pass = ($('#l-pass') || {}).value;
+    const rem = $('#l-remember') ? $('#l-remember').checked : remember;
+    if (rem !== remember) { remember = rem; try { localStorage.setItem('camada_remember', rem ? '1' : '0'); } catch (e) {} sb = makeClient(remember); sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') location.reload(); }); }
+    btn.disabled = true;
+    try {
+      if (id === 'l-login') {
+        if (!email || !pass) throw { message: 'Informe e-mail e senha.' };
+        const { data, error } = await sb.auth.signInWithPassword({ email: email.trim(), password: pass }); if (error) throw error;
+        await startSession(data.user); return;
+      }
+      if (id === 'l-signup') {
+        const nick = ($('#l-nick').value || '').trim(); if (!nick) throw { message: 'Diga como quer ser chamado(a).' };
+        const { data, error } = await sb.auth.signUp({ email: email.trim(), password: pass, options: { data: { nick, role: obRole }, emailRedirectTo: location.origin + location.pathname } }); if (error) throw error;
+        if (data.session) { await startSession(data.user); return; }
+        authView = 'login'; render(); authMsg('Conta criada. Abra o e-mail de confirmação que enviamos e depois entre aqui.'); return;
+      }
+      if (id === 'l-reset') { const { error } = await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.origin + location.pathname }); if (error) throw error; authMsg('Se o e-mail tiver conta, o link chega em instantes.'); }
+      if (id === 'l-newpass') { const { error } = await sb.auth.updateUser({ password: pass }); if (error) throw error; recovering = false; const { data } = await sb.auth.getSession(); toast('Senha alterada'); if (data.session) await startSession(data.session.user); }
+    } catch (e) { authMsg(authErr(e)); }
+    btn.disabled = false;
+  }
+  async function logout() { try { await sb.auth.signOut(); } catch (e) {} location.reload(); }
+  function vPending() {
+    return '<div class="card onboard"><h1>Aguardando aprovação</h1><p class="hint" style="font-size:14px">Sua conta foi criada. Peça para a gestão abrir <b>Equipe</b> no app e aprovar seu acesso. Esta tela atualiza sozinha quando for aprovado.</p><button class="btn" id="l-logout">Sair</button></div>';
+  }
+  // Backup: exportar e importar todos os dados
+  function backupData() { const o = { app: 'camada-operacoes', version: 1, exportedAt: new Date().toISOString(), settings: S.settings }; COLLS.forEach((c) => { if (c !== 'members') o[c] = S[c]; }); return o; }
+  async function exportBackup() {
+    const blob = new Blob([JSON.stringify(backupData(), null, 1)], { type: 'application/json' }), name = 'camada-backup-' + today() + '.json';
+    let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
+    if (dl) { try { await dl.save({ filename: name, data: blob }); toast('Backup salvo'); return; } catch (e) { if (e && e.code === 'declined') return; } }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Backup baixado');
+  }
+  async function importBackup(file) {
+    let o; try { o = JSON.parse(await file.text()); } catch (e) { toast('Arquivo inválido'); return; }
+    if (!o || o.app !== 'camada-operacoes') { toast('Este arquivo não é um backup da Camada'); return; }
+    const n = COLLS.reduce((a, c) => a + ((o[c] || []).length || 0), 0);
+    if (!(await confirmDlg('Importar ' + n + ' registro(s)?', 'Registros com o mesmo código são substituídos; os demais continuam. Dados de produtos, filamentos, vendas, encomendas e ajustes entram para toda a equipe.', 'Importar'))) return;
+    if (mode === 'cloud') {
+      const rows = []; COLLS.forEach((c) => { if (c === 'members') return; (o[c] || []).forEach((d) => { const body = Object.assign({}, d); delete body.id; if (d.id) rows.push({ id: d.id, coll: c, data: body, updated_by: ME.id }); }); });
+      if (o.settings) rows.push({ id: 'settings', coll: 'config', data: o.settings, updated_by: ME.id });
+      for (let i = 0; i < rows.length; i += 400) { const { error } = await sb.from('docs').upsert(rows.slice(i, i + 400)); if (error) { toast('Falhou no meio da importação: ' + error.message); return; } }
+      await loadDocs();
+    } else if (mode === 'db') {
+      for (const c of COLLS) { if (c === 'members') continue; for (const d of o[c] || []) { if (d.id) await saveDoc(c, d); } }
+      if (o.settings) await saveSettings(o.settings);
+    } else { COLLS.forEach((c) => { if (c === 'members') return; (o[c] || []).forEach((d) => d.id && localPut(c, d)); }); if (o.settings) S.settings = o.settings; localSave(); render(); }
+    toast('Backup importado');
+  }
+  // Instalação do app no celular
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; scheduleRender(); });
+  const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+
+  async function boot() {
+    if (CLOUD) return bootCloud();
+    let cl = null;
+    try { cl = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch (e) { cl = null; }
+    if (cl) {
+      db = cl; mode = 'db';
+      try { assets = await window.claude.use('assets'); } catch (e) { assets = null; }
+      try { userCap = await window.claude.use('user'); } catch (e) { userCap = null; }
+      try { const m = userCap ? await userCap.me() : null; if (m) ME = { id: m.id, isOwner: !!m.isOwner, name: m.name || '' }; else ME = { id: null, isOwner: false, name: '' }; } catch (e) { ME = { id: null, isOwner: false, name: '' }; }
+      if (!ME.id) { try { ME.id = localStorage.getItem('camada_anon') || ('anon-' + uid()); localStorage.setItem('camada_anon', ME.id); } catch (e) { ME.id = 'anon-' + uid(); } }
+      let pending = COLLS.length + 1;
+      const done = () => { if (--pending === 0) { S.ready = true; } scheduleRender(); };
+      COLLS.forEach((c) => {
+        let first = true;
+        db.collection(c).onSnapshot((snap) => {
+          S[c] = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+          if (first) { first = false; done(); } else scheduleRender();
+        }, () => { if (first) { first = false; done(); } });
+      });
+      let firstS = true;
+      db.doc('config/settings').onSnapshot((snap) => { S.settings = snap.exists ? snap.data() : null; if (firstS) { firstS = false; done(); } else scheduleRender(); }, () => { if (firstS) { firstS = false; done(); } });
+    } else {
+      const o = localLoad(); COLLS.forEach((c) => (S[c] = o[c] || [])); S.settings = o.settings || null; S.ready = true; render();
+    }
+  }
+
+  // ================= Cálculos =================
+  const byId = (coll, id) => S[coll].find((x) => x.id === id);
+  function filStats(fid) {
+    const pur = S.purchases.filter((p) => p.filamentId === fid);
+    const bought = pur.reduce((s, p) => s + num(p.grams), 0);
+    const spent = pur.reduce((s, p) => s + num(p.price), 0);
+    let used = 0, used30 = 0; const now = new Date();
+    S.productions.forEach((pr) => (pr.use || []).forEach((u) => {
+      if (u.filamentId !== fid) return;
+      used += num(u.grams);
+      if (pr.kind !== 'ajuste' && (now - new Date(pr.date)) / 864e5 <= 30) used30 += num(u.grams);
+    }));
+    const stock = bought - used;
+    const cpg = bought > 0 ? spent / bought : set().defaultCpg;
+    const f = byId('filaments', fid) || {};
+    const perDay = used30 / 30;
+    const daysLeft = perDay > 0 ? Math.floor(Math.max(0, stock) / perDay) : null;
+    const min = num(f.minStock || 0);
+    let status = 'good';
+    if (stock <= 0) status = 'bad';
+    else if (stock < min || (daysLeft !== null && daysLeft < 10)) status = 'warn';
+    return { bought, spent, used, used30, stock, cpg, daysLeft, min, status };
+  }
+  function machineHours(mid) {
+    const m = byId('machines', mid) || {};
+    const mins = S.productions.filter((p) => p.machineId === mid).reduce((s, p) => s + num(p.minutes), 0);
+    return num(m.baseHours || 0) + mins / 60;
+  }
+  function maintStatus(t) {
+    const hNow = machineHours(t.machineId);
+    let due = null, label = '', level = 'good';
+    if (num(t.everyHours) > 0) {
+      const left = num(t.everyHours) - (hNow - num(t.lastHours || 0));
+      due = left; label = left < 0 ? 'atrasada há ' + n1(-left) + ' h' : 'em ' + n1(left) + ' h de impressão';
+      level = left < 0 ? 'bad' : left <= Math.max(5, num(t.everyHours) * 0.1) ? 'warn' : 'good';
+    }
+    if (num(t.everyDays) > 0) {
+      const left = num(t.everyDays) - daysBetween(t.lastDate || today(), today());
+      const lbl = left < 0 ? 'atrasada há ' + (-left) + ' dias' : left === 0 ? 'vence hoje' : 'em ' + left + ' dias';
+      const lv = left < 0 ? 'bad' : left <= 2 ? 'warn' : 'good';
+      if (due === null || lv === 'bad' || (lv === 'warn' && level === 'good')) { label = lbl; level = lv; }
+    }
+    return { label: label || 'sem intervalo', level };
+  }
+  function productCost(p, colors) {
+    colors = colors || {};
+    const st = set();
+    const mach = byId('machines', p.machineId) || S.machines[0] || {};
+    const watts = num(mach.watts || 150);
+    const hours = num(p.printMinutes) / 60;
+    const fil = (p.filaments || []).reduce((s, u) => s + num(u.grams) * filStats(colors[u.filamentId] || u.filamentId).cpg, 0);
+    const energy = hours * watts / 1000 * num(st.kwh);
+    const fail = (fil + energy) * num(st.failPct) / 100;
+    const helper = num(p.helperMinutes) / 60 * num(st.helperHour) + num(p.helperPiece);
+    const pack = p.packaging !== undefined && p.packaging !== '' ? num(p.packaging) : num(st.packaging);
+    const other = num(p.otherCost);
+    return { fil, energy, fail, helper, pack, other, total: fil + energy + fail + helper + pack + other, grams: (p.filaments || []).reduce((s, u) => s + num(u.grams), 0) };
+  }
+  function feeAt(price, ch) {
+    const st = set();
+    if (ch === 'ml') return price < num(st.ml.threshold) ? price * num(st.ml.pct) / 100 + num(st.ml.fixedUnder) : price * num(st.ml.pct) / 100 + num(st.ml.freeShip);
+    if (ch === 'shopee') { const t = st.shopee.tiers.find((x) => price <= num(x.upTo)) || st.shopee.tiers[st.shopee.tiers.length - 1]; return price * num(t.pct) / 100 + num(t.fixed); }
+    if (ch === 'tiktok') {
+      const t = st.tiktok; let f = price < num(t.under) ? price * num(t.pctUnder) / 100 + num(t.fixedUnder) : price * num(t.pctOver) / 100 + num(t.fixedOver);
+      if (t.shipProgram) f += Math.min(price * num(t.shipPct) / 100, num(t.shipCap));
+      return f;
+    }
+    if (ch === 'instagram' || ch === 'site' || ch === 'vendedor') { const c = st[ch]; return price * num(c.payPct) / 100 + num(c.fixed); }
+    return 0;
+  }
+  const commOf = (sellerId) => { const x = byId('sellers', sellerId); return x ? num(x.commission) : 0; };
+  const sellerName = (id) => { const x = byId('sellers', id); return x ? x.name : ''; };
+  // Menor preço terminado em ,90 que garante a margem desejada sobre o preço de venda.
+  function suggest(cost, marginPct, ch, commPct) {
+    const m = num(marginPct) / 100, cm = num(commPct) / 100;
+    if (m + cm >= 0.97) return null;
+    const ok = (p) => p - feeAt(p, ch) - p * cm - cost >= m * p - 1e-9;
+    let p = Math.max(1, cost), steps = 0;
+    while (!ok(p) && steps < 20000) { p += 0.1; steps++; }
+    if (steps >= 20000) return null;
+    let r = Math.floor(p) + 0.9; if (r < p - 1e-9) r += 1;
+    let k = 0; while (!ok(r) && k < 500) { r += 1; k++; }
+    const fee = feeAt(r, ch), commission = r * cm, profit = r - fee - commission - cost;
+    return { price: r, fee, commission, profit, margin: profit / r * 100 };
+  }
+  function canProduce(lines) {
+    const need = {};
+    lines.forEach((l) => { const p = byId('products', l.productId); if (!p) return; const cm = l.colors || {}; (p.filaments || []).forEach((u) => { const fid = cm[u.filamentId] || u.filamentId; need[fid] = (need[fid] || 0) + num(u.grams) * num(l.qty) * (1 + num(set().failPct) / 100); }); });
+    return Object.keys(need).map((fid) => { const s = filStats(fid); return { fid, need: need[fid], stock: s.stock, missing: Math.max(0, need[fid] - Math.max(0, s.stock)), cpg: s.cpg }; });
+  }
+  // Peças prontas = produzidas − vendidas − reservadas por outras encomendas abertas.
+  // Variação de cor = filamento usado em cada parte da peça (ex.: base Preto + nome Branco).
+  const slotsOf = (p, colors) => (p.filaments || []).map((u) => (colors && colors[u.filamentId]) || u.filamentId);
+  const varKey = (p, colors) => slotsOf(p, colors).join('+');
+  function prodKey(x, p) { const u = x.use || [], f = p.filaments || []; return u.length === f.length && u.length ? u.map((y) => y.filamentId).join('+') : varKey(p); }
+  function varName(p, key) {
+    const ids = key.split('+'), f = p.filaments || [];
+    if (ids.length <= 1) { const g = byId('filaments', ids[0]); return swatch(g) + ' ' + esc(g ? g.material + ' ' + g.color : '—'); }
+    return ids.map((id, i) => { const g = byId('filaments', id); return swatch(g) + ' ' + esc((f[i] && f[i].part ? f[i].part + ' ' : '') + (g ? g.color : '—')); }).map((x) => '<span style="white-space:nowrap">' + x + '</span>').join('<br>');
+  }
+  // Peças prontas por variação: produzidas − vendidas − reservadas por outras encomendas abertas.
+  function readyByVar(pid, excludeOrderId) {
+    const p = byId('products', pid), out = {};
+    if (!p) return out;
+    const r = (k) => (out[k] = out[k] || { produced: 0, sold: 0, reserved: 0 });
+    S.productions.forEach((x) => { if (x.kind !== 'perda' && x.productId === pid) r(prodKey(x, p)).produced += num(x.qty); });
+    S.sales.forEach((x) => { if (x.productId === pid) r(varKey(p, x.colors)).sold += num(x.qty); });
+    S.orders.forEach((o) => { if (o.id === excludeOrderId || o.billed || !['confirmada', 'producao', 'pronta'].includes(o.status)) return; (o.items || []).forEach((i) => { if (i.productId === pid) r(varKey(p, i.colors)).reserved += num(i.qty); }); });
+    Object.values(out).forEach((v) => { v.onHand = Math.max(0, v.produced - v.sold); v.free = Math.max(0, v.produced - v.sold - v.reserved); });
+    return out;
+  }
+  function readyStock(pid, excludeOrderId, key) {
+    const vs = readyByVar(pid, excludeOrderId), list = key !== undefined ? (vs[key] ? [vs[key]] : []) : Object.values(vs);
+    const t = list.reduce((a, v) => ({ produced: a.produced + v.produced, sold: a.sold + v.sold, reserved: a.reserved + v.reserved, onHand: a.onHand + v.onHand, free: a.free + v.free }), { produced: 0, sold: 0, reserved: 0, onHand: 0, free: 0 });
+    t.vars = vs; return t;
+  }
+  function dealPlan(items, excludeOrderId) {
+    const used = {}, fail = 1 + num(set().failPct) / 100, need = {};
+    const lines = items.map((it) => {
+      const p = byId('products', it.productId), q = Math.max(0, Math.floor(num(it.qty)));
+      if (!p || !q) return null;
+      const key = varKey(p, it.colors), uk = p.id + '|' + key;
+      const avail = Math.max(0, readyStock(p.id, excludeOrderId, key).free - (used[uk] || 0));
+      const ready = Math.min(q, avail); used[uk] = (used[uk] || 0) + ready;
+      return { p, q, ready, make: q - ready, colors: it.colors || {}, key, used: Object.assign({}, used) };
+    });
+    lines.forEach((l) => { if (!l || !l.make) return; (l.p.filaments || []).forEach((u) => { const fid = l.colors[u.filamentId] || u.filamentId; need[fid] = (need[fid] || 0) + num(u.grams) * l.make * fail; }); });
+    const fil = Object.keys(need).map((fid) => { const s = filStats(fid); return { fid, need: need[fid], stock: s.stock, missing: Math.max(0, need[fid] - Math.max(0, s.stock)), cpg: s.cpg }; });
+    const status = {}; fil.forEach((r) => (status[r.fid] = r));
+    return { lines, fil, status, fail, need };
+  }
+  // Quantas peças o cliente pode ter em cada cor: prontas + o que o filamento livre permite produzir.
+  function colorOptions(items, i, excludeOrderId) {
+    const it = items[i], p = byId('products', it.productId); if (!p || !(p.filaments || []).length) return [];
+    const fail = 1 + num(set().failPct) / 100, f = p.filaments;
+    // filamento já comprometido pelos outros itens deste pedido
+    const others = dealPlan(items.map((x, k) => (k === i ? { productId: '', qty: 0 } : x)), excludeOrderId);
+    const vars = readyByVar(p.id, excludeOrderId);
+    // prontas já usadas por itens anteriores com o mesmo produto/cor
+    const usedBefore = {}; items.slice(0, i).forEach((x) => { if (x.productId !== p.id) return; const k = varKey(p, x.colors); usedBefore[k] = (usedBefore[k] || 0) + Math.floor(num(x.qty)); });
+    const cands = {}, add = (slots) => (cands[slots.join('+')] = slots);
+    if (f.length === 1) S.filaments.forEach((g) => add([g.id]));
+    else {
+      const cur = slotsOf(p, it.colors); add(cur);
+      Object.keys(vars).forEach((k) => { if (k.split('+').length === f.length) add(k.split('+')); });
+      cur.forEach((_, si) => S.filaments.forEach((g) => { const c = cur.slice(); c[si] = g.id; add(c); }));
+    }
+    const curKey = varKey(p, it.colors);
+    return Object.keys(cands).map((k) => {
+      const slots = cands[k], per = {};
+      slots.forEach((fid, si) => (per[fid] = (per[fid] || 0) + num(f[si].grams) * fail));
+      let make = Infinity;
+      Object.keys(per).forEach((fid) => { const free = Math.max(0, filStats(fid).stock) - (others.need[fid] || 0); make = Math.min(make, per[fid] > 0 ? Math.floor(Math.max(0, free) / per[fid]) : Infinity); });
+      if (make === Infinity) make = 0;
+      const ready = Math.max(0, (vars[k] ? vars[k].free : 0) - (usedBefore[k] || 0));
+      const colors = {}; slots.forEach((fid, si) => { if (fid !== f[si].filamentId) colors[f[si].filamentId] = fid; });
+      return { key: k, ready, make, total: ready + make, colors, current: k === curKey };
+    }).filter((o) => o.current || o.total > 0).sort((a, b) => (b.current - a.current) || b.total - a.total).slice(0, 8);
+  }
+  function altsFor(fid, grams) {
+    const f = byId('filaments', fid) || {};
+    return S.filaments.filter((g) => g.id !== fid).map((g) => ({ g, stock: filStats(g.id).stock })).filter((x) => x.stock >= grams).sort((a, b) => ((b.g.material === f.material) - (a.g.material === f.material)) || b.stock - a.stock).slice(0, 3);
+  }
+  function maxQty(p) {
+    const f = num(set().failPct) / 100; let max = Infinity;
+    (p.filaments || []).forEach((u) => { const g = num(u.grams) * (1 + f); if (g > 0) max = Math.min(max, Math.floor(Math.max(0, filStats(u.filamentId).stock) / g)); });
+    return max === Infinity ? 0 : max;
+  }
+  function finance() {
+    const months = {};
+    const mk = (k) => (months[k] = months[k] || { rev: 0, fees: 0, net: 0, fil: 0, prod: 0, exp: 0, inv: 0 });
+    S.sales.forEach((s) => { const m = mk(monthKey(s.date)); m.rev += num(s.unitPrice) * num(s.qty); m.fees += num(s.fees) + num(s.shipping) + num(s.commission); m.net += num(s.net); });
+    S.purchases.forEach((p) => { mk(monthKey(p.date)).fil += num(p.price); });
+    S.productions.forEach((p) => { mk(monthKey(p.date)).prod += num(p.energyCost) + num(p.helperCost); });
+    S.expenses.forEach((e) => { const m = mk(monthKey(e.date)); if (e.kind === 'investimento') m.inv += num(e.amount); else m.exp += num(e.amount); });
+    S.machines.forEach((x) => { if (x.purchaseDate) mk(monthKey(x.purchaseDate)).inv += num(x.price); });
+    const keys = Object.keys(months).filter(Boolean).sort();
+    let cum = 0;
+    const rows = keys.map((k) => { const m = months[k]; const costs = m.fil + m.prod + m.exp; const profit = m.net - costs; cum += profit; return Object.assign({ key: k, costs, profit, cum }, m); });
+    const invest = S.machines.reduce((s, x) => s + num(x.price), 0) + S.expenses.filter((e) => e.kind === 'investimento').reduce((s, e) => s + num(e.amount), 0);
+    const tot = rows.reduce((a, r) => ({ rev: a.rev + r.rev, net: a.net + r.net, costs: a.costs + r.costs, profit: a.profit + r.profit, fees: a.fees + r.fees }), { rev: 0, net: 0, costs: 0, profit: 0, fees: 0 });
+    return { rows, invest, tot, roi: invest > 0 ? tot.profit / invest * 100 : null };
+  }
+  function alerts() {
+    const out = [];
+    S.filaments.forEach((f) => {
+      const s = filStats(f.id);
+      if (s.status === 'bad') out.push({ level: 'bad', text: f.material + ' ' + f.color + ': sem estoque', go: 'filamentos' });
+      else if (s.status === 'warn') out.push({ level: 'warn', text: f.material + ' ' + f.color + ': ' + grams(s.stock) + ' restantes' + (s.daysLeft !== null ? ' (≈ ' + s.daysLeft + ' dias no ritmo atual)' : '') + ' · comprar', go: 'filamentos' });
+    });
+    S.orders.forEach((o) => {
+      if (o.status === 'entregue' || o.status === 'cancelada' || o.status === 'orcamento' || !o.dueDate) return;
+      const d = daysBetween(today(), o.dueDate);
+      if (d < 0) out.push({ level: 'bad', text: 'Encomenda de ' + o.client + ': prazo venceu há ' + (-d) + ' dia(s)', go: 'encomendas' });
+      else if (d <= 2) out.push({ level: 'warn', text: 'Encomenda de ' + o.client + ': entrega ' + (d === 0 ? 'hoje' : 'em ' + d + ' dia(s)'), go: 'encomendas' });
+    });
+    S.maintenance.forEach((t) => { const st = maintStatus(t); const m = byId('machines', t.machineId); if (st.level !== 'good') out.push({ level: st.level, text: (m ? m.name + ': ' : '') + t.task + ' — ' + st.label, go: 'maquinas' }); });
+    return out.sort((a, b) => (a.level === 'bad' ? 0 : 1) - (b.level === 'bad' ? 0 : 1));
+  }
+
+  // ================= Equipe, avisos e mensagens =================
+  const ROLES = { gestao: 'Gestão', vendas: 'Vendas', producao: 'Produção' };
+  const ROLE_VIEWS = { gestao: null, vendas: ['avisos', 'encomendas', 'vendas', 'produtos', 'mensagens'], producao: ['avisos', 'producao', 'encomendas', 'filamentos', 'maquinas', 'produtos', 'mensagens'] };
+  let ME = { id: 'local', isOwner: true, name: '' }, userCap = null, viewAs = '', obRole = 'vendas', dealCtx = null, downloadsCap;
+  try { viewAs = localStorage.getItem('camada_viewas') || ''; } catch (e) {}
+  const PROFILES = {};
+  const myMember = () => S.members.find((m) => m.id === ME.id);
+  function myRole() { const m = myMember(); if (mode === 'cloud' && (!m || !m.approved)) return ''; if (ME.isOwner) return viewAs || 'gestao'; return m ? m.role : ''; }
+  function allowed(v) { const r = ROLE_VIEWS[myRole()]; return !r || r.includes(v); }
+  function personName(id) { const m = S.members.find((x) => x.id === id); return (m && m.nick) || (PROFILES[id] && PROFILES[id].name) || (id === ME.id ? 'Você' : 'Alguém da equipe'); }
+  let profQ = false;
+  function resolveProfiles() {
+    if (!userCap || profQ) return;
+    const ids = [...new Set(S.messages.map((m) => m.authorId).concat(S.members.map((m) => m.id)))].filter((id) => id && !String(id).startsWith('anon-') && !PROFILES[id]);
+    if (!ids.length) return; profQ = true;
+    userCap.profiles(ids).then((ps) => { Object.assign(PROFILES, ps || {}); ids.forEach((id) => (PROFILES[id] = PROFILES[id] || { name: '' })); profQ = false; scheduleRender(); }).catch(() => { ids.forEach((id) => (PROFILES[id] = { name: '' })); profQ = false; });
+  }
+  const isActiveOrder = (o) => !o.billed && ['confirmada', 'producao', 'pronta'].includes(o.status);
+  // Distribui as peças prontas entre as encomendas abertas, da entrega mais próxima para a mais distante.
+  function allocOrders() {
+    const pool = {}, out = {};
+    S.orders.filter(isActiveOrder).sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999') || (a.date || '').localeCompare(b.date || '')).forEach((o) => {
+      const items = (o.items || []).map((it) => {
+        const p = byId('products', it.productId), q = Math.floor(num(it.qty)); if (!p || q <= 0) return null;
+        const key = varKey(p, it.colors), k = p.id + '|' + key;
+        if (pool[k] === undefined) { const v = readyByVar(p.id, null)[key]; pool[k] = v ? v.onHand : 0; }
+        const ready = Math.min(q, Math.max(0, pool[k])); pool[k] -= ready;
+        return { p, q, ready, make: q - ready, key, colors: it.colors || {} };
+      }).filter(Boolean);
+      out[o.id] = { items, make: items.reduce((a, x) => a + x.make, 0), readyQty: items.reduce((a, x) => a + x.ready, 0), ready: items.length > 0 && items.every((x) => !x.make) };
+    });
+    return out;
+  }
+  const varPlain = (p, key) => key.split('+').map((id) => { const g = byId('filaments', id); return g ? g.color : '?'; }).join(' + ');
+  const dueTxt = (o) => { if (!o.dueDate) return ''; const d = daysBetween(today(), o.dueDate); return ' · entrega ' + fmtDate(o.dueDate) + (d < 0 ? ' (atrasada ' + (-d) + 'd)' : d === 0 ? ' (hoje)' : ' (em ' + d + 'd)'); };
+  function waLink(phone, text) { let d = String(phone || '').replace(/\D/g, ''); if (d && d.length <= 11) d = '55' + d; return 'https://wa.me/' + d + '?text=' + encodeURIComponent(text || ''); }
+  function notifications() {
+    const role = myRole(), out = [], A = allocOrders(), fail = 1 + num(set().failPct) / 100;
+    const sees = (roles) => role === 'gestao' || roles.includes(role);
+    S.orders.filter(isActiveOrder).forEach((o) => {
+      const a = A[o.id]; if (!a || !a.items.length) return;
+      const d = o.dueDate ? daysBetween(today(), o.dueDate) : 99;
+      if (a.ready && sees(['vendas'])) out.push({ key: 'ready:' + o.id, level: 'good', tag: 'Pode entregar', title: 'Encomenda de ' + o.client + ' está pronta para entregar', text: a.items.map((x) => x.q + '× ' + x.p.name + ' (' + varPlain(x.p, x.key) + ')').join(', ') + dueTxt(o), order: o, p: a.items[0].p, actions: ['whats', 'deliver', 'msg'] });
+      if (a.make && sees(['producao'])) {
+        const need = {}; a.items.forEach((x) => { if (!x.make) return; x.key.split('+').forEach((fid, si) => { const u = (x.p.filaments || [])[si]; if (u) need[fid] = (need[fid] || 0) + num(u.grams) * x.make * fail; }); });
+        const short = Object.keys(need).filter((fid) => need[fid] > Math.max(0, filStats(fid).stock)).map((fid) => { const g = byId('filaments', fid); return (g ? g.material + ' ' + g.color : 'filamento') + ' (faltam ' + grams(need[fid] - Math.max(0, filStats(fid).stock)) + ')'; });
+        out.push({ key: 'make:' + o.id + ':' + a.make, level: d <= 2 || short.length ? 'bad' : 'warn', tag: 'Produzir', title: 'Produzir ' + a.make + ' peça(s) para a encomenda de ' + o.client, text: a.items.filter((x) => x.make).map((x) => x.make + '× ' + x.p.name + ' (' + varPlain(x.p, x.key) + ')').join(', ') + (a.readyQty ? ' · ' + a.readyQty + ' já pronta(s)' : '') + dueTxt(o) + (short.length ? ' · falta filamento: ' + short.join(', ') : ''), order: o, p: a.items.find((x) => x.make).p, actions: ['plan', 'msg'] });
+      }
+    });
+    alerts().forEach((x) => {
+      if (x.go === 'encomendas') { if (sees(['vendas', 'producao'])) out.push({ key: 'al:' + x.text.replace(/\d+/g, '#'), level: x.level, tag: 'Prazo', title: x.text, text: '', go: 'encomendas' }); }
+      else if (sees(['producao'])) out.push({ key: 'al:' + x.go + ':' + x.text.split(':')[0], level: x.level, tag: x.go === 'maquinas' ? 'Manutenção' : 'Filamento', title: x.text, text: '', go: x.go });
+    });
+    const rank = { bad: 0, good: 1, warn: 2 };
+    return out.sort((a, b) => rank[a.level] - rank[b.level]);
+  }
+  let SEEN = {}, lastMsgSeen = 0;
+  try { SEEN = JSON.parse(localStorage.getItem('camada_seen') || '{}') || {}; lastMsgSeen = +localStorage.getItem('camada_msgseen') || 0; } catch (e) {}
+  const saveSeen = () => { try { localStorage.setItem('camada_seen', JSON.stringify(SEEN)); localStorage.setItem('camada_msgseen', String(lastMsgSeen)); } catch (e) {} };
+  function visibleMsgs() { const r = myRole(); return S.messages.filter((m) => r === 'gestao' || m.to === 'todos' || m.to === r || m.authorId === ME.id).sort((a, b) => num(a.createdAt) - num(b.createdAt)); }
+  const unreadMsgs = () => visibleMsgs().filter((m) => m.authorId !== ME.id && num(m.createdAt) > lastMsgSeen);
+  let prevKeys = null, prevMsgs = null, LIVE = { ns: [], msgs: [] };
+  function liveCheck() {
+    if (!S.ready || !myRole()) return;
+    const ns = notifications(), msgs = unreadMsgs();
+    if (prevKeys) {
+      const fresh = ns.filter((n) => !prevKeys.has(n.key) && !SEEN[n.key]), freshM = msgs.filter((m) => !prevMsgs.has(m.id));
+      if (fresh.length) toast('Novo aviso: ' + fresh[0].title + (fresh.length > 1 ? ' (+' + (fresh.length - 1) + ')' : ''));
+      else if (freshM.length) toast((freshM[0].auto ? 'Aviso' : personName(freshM[0].authorId)) + ': ' + String(freshM[0].text).slice(0, 90));
+      if (fresh.length || freshM.length) { try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} }
+    }
+    prevKeys = new Set(ns.map((n) => n.key)); prevMsgs = new Set(msgs.map((m) => m.id));
+    LIVE = { ns, msgs };
+  }
+  function updateTitle() { const n = LIVE.ns.filter((x) => !SEEN[x.key]).length + unreadMsgs().length; document.title = (n ? '(' + n + ') ' : '') + 'Camada Operações'; }
+  async function postAuto(to, text, orderId) { try { await saveDoc('messages', { authorId: ME.id, role: myRole(), to, text, orderId: orderId || '', auto: true, createdAt: Date.now() }); } catch (e) {} }
+
+  function vAvisos() {
+    const ns = LIVE.ns, role = myRole();
+    let h = head('Avisos', { vendas: 'Encomendas que já podem ser entregues e prazos chegando.', producao: 'O que precisa ser produzido para as encomendas, filamento acabando e manutenção.', gestao: 'Tudo que pede ação da equipe: entregas, produção, filamento e manutenção.' }[role]);
+    if (!ns.length) return h + empty('Nada pendente', role === 'vendas' ? 'Quando uma encomenda tiver todas as peças prontas, ela aparece aqui para você avisar o cliente.' : 'Quando uma encomenda precisar de produção, ela aparece aqui.', '');
+    h += '<div class="notifs">' + ns.map((n) => {
+      const o = n.order, isNew = !SEEN[n.key];
+      const acts = (n.actions || []).map((a) => {
+        if (a === 'whats') return o.phone || o.contact ? '<a class="btn sm primary" target="_blank" rel="noopener" href="' + esc(waLink(o.phone || o.contact, 'Olá' + (o.client ? ', ' + o.client.split(' ')[0] : '') + '! Sua encomenda está pronta: ' + (o.items || []).map((it) => { const p = byId('products', it.productId); return num(it.qty) + '× ' + (p ? p.name : ''); }).join(', ') + '. Total ' + brl(orderCalc(o).gross) + (num(o.deposit) ? ' (falta ' + brl(Math.max(0, orderCalc(o).gross - num(o.deposit))) + ')' : '') + '. Como prefere receber?')) + '">Avisar cliente no WhatsApp</a>' : '';
+        if (a === 'deliver') return '<button class="btn sm" data-deliver="' + o.id + '">Marcar entregue</button>';
+        if (a === 'plan') return '<button class="btn sm primary" data-order-plan="' + o.id + '">Produzir agora</button>';
+        if (a === 'msg') return '<button class="btn sm ghost" data-msg-order="' + o.id + '">Mensagem</button>';
+        return '';
+      }).join('') + (n.go ? '<button class="btn sm" data-go="' + n.go + '">Abrir</button>' : '') + (o ? '<button class="btn sm ghost" data-edit-order="' + o.id + '">Ver encomenda</button>' : '');
+      return '<div class="notif ' + n.level + '">' + (n.p ? '<span class="thumb">' + photo(n.p) + '</span>' : '') + '<div class="notif-b"><span class="row" style="gap:6px;margin:0"><span class="pill ' + (n.level === 'good' ? 'good' : n.level === 'bad' ? 'bad' : 'warn') + '">' + esc(n.tag) + '</span>' + (isNew ? '<span class="pill neutral">novo</span>' : '') + '</span><b>' + esc(n.title) + '</b>' + (n.text ? '<span class="hint">' + esc(n.text) + '</span>' : '') + '<div class="row">' + acts + '</div></div></div>';
+    }).join('') + '</div>';
+    return h;
+  }
+  let msgDraft = { text: '', to: '', orderId: '' };
+  function vMensagens() {
+    const r = myRole(), list = visibleMsgs().slice(-150);
+    const defTo = msgDraft.to || ({ vendas: 'producao', producao: 'vendas' }[r] || 'todos');
+    const toOpts = [['todos', 'Toda a equipe'], ['vendas', 'Vendas'], ['producao', 'Produção'], ['gestao', 'Gestão']];
+    const openO = S.orders.filter((o) => o.status !== 'entregue' && o.status !== 'cancelada');
+    let h = head('Mensagens', 'Recados entre vendas, produção e gestão. As mensagens automáticas avisam quando entra encomenda, quando a produção termina e quando algo é entregue.');
+    h += '<div class="card chat"><div class="msgs" id="msgs">' + (list.length ? list.map((m) => {
+      const o = m.orderId ? byId('orders', m.orderId) : null, mine = m.authorId === ME.id && !m.auto;
+      const when = new Date(num(m.createdAt)).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      return '<div class="msg' + (mine ? ' me' : '') + (m.auto ? ' auto' : '') + '"><div class="msg-h"><b>' + (m.auto ? 'Aviso automático' : esc(personName(m.authorId))) + '</b>' + (m.role ? '<span class="pill neutral">' + esc(ROLES[m.role] || m.role) + '</span>' : '') + '<span>para ' + esc((toOpts.find((x) => x[0] === m.to) || ['', 'equipe'])[1]) + ' · ' + when + '</span></div><div class="msg-b">' + esc(m.text).replace(/\n/g, '<br>') + '</div>' + (o ? '<button class="btn sm ghost" style="align-self:flex-start" data-edit-order="' + o.id + '">Encomenda de ' + esc(o.client) + '</button>' : '') + '</div>';
+    }).join('') : '<p class="hint">Nenhuma mensagem ainda. Escreva o primeiro recado para a equipe.</p>') + '</div>' +
+      '<div class="composer"><textarea class="in" id="msg-text" placeholder="Escreva um recado… (ex.: cliente pediu para trocar o nome para LUNA)">' + esc(msgDraft.text) + '</textarea><div class="row"><select class="in" id="msg-to" aria-label="Para quem">' + toOpts.map(([k, l]) => '<option value="' + k + '"' + (k === defTo ? ' selected' : '') + '>Para: ' + l + '</option>').join('') + '</select><select class="in" id="msg-order" aria-label="Sobre a encomenda"><option value="">Sem encomenda</option>' + openO.map((o) => '<option value="' + o.id + '"' + (o.id === msgDraft.orderId ? ' selected' : '') + '>Encomenda de ' + esc(o.client) + '</option>').join('') + '</select><button class="btn primary" id="msg-send">Enviar</button></div></div></div>';
+    return h;
+  }
+  function vEquipe() {
+    const rows = S.members.slice().sort((a, b) => ((a.approved === false) ? 0 : 1) - ((b.approved === false) ? 0 : 1) || personName(a.id).localeCompare(personName(b.id), 'pt-BR'));
+    let h = head('Equipe', 'Quem usa o app e o que cada um vê. Vendas vê encomendas, vendas, produtos e avisos de entrega. Produção vê produção, filamentos, máquinas e avisos do que produzir. Gestão vê tudo, inclusive indicadores e finanças.');
+    h += '<div class="card"><h2>Como colocar alguém na equipe</h2>' + (mode === 'cloud' ? '<ol class="hint" style="margin:8px 0 0;padding-left:18px;line-height:1.7"><li>Mande o link do app para a pessoa. No celular ela pode tocar em <b>Instalar app</b> (ou, no iPhone, Compartilhar › Adicionar à Tela de Início).</li><li>Ela toca em <b>Criar conta</b>, escolhe a função e cria a senha.</li><li>Ela aparece aqui como "aguardando aprovação": toque em <b>Aprovar</b>.</li></ol></div>' : '') + (mode === 'cloud' ? '<div hidden>' : '') + '<ol class="hint" style="margin:8px 0 0;padding-left:18px;line-height:1.7"><li>No Claude, abra o menu <b>Compartilhar</b> deste app e convide a pessoa com acesso de <b>Colaborador</b> (quem só visualiza não consegue lançar nada).</li><li>Ela abre o link, escolhe a função (Vendas ou Produção) e o apelido.</li><li>Aqui você muda a função, liga o vendedor ao cadastro de comissão ou remove a pessoa.</li></ol><p class="hint" style="margin-top:8px">As funções organizam as telas de cada um; não são uma trava de segurança. Dê acesso só a quem é da equipe.</p></div>';
+    h += '<div class="card"><h2>Pessoas</h2>' + (rows.length ? '<div class="tbl-wrap"><table><thead><tr><th>Pessoa</th><th>Função</th><th>Cadastro de vendedor (comissão)</th><th></th></tr></thead><tbody>' + rows.map((m) => '<tr><td><b>' + esc(personName(m.id)) + '</b>' + (m.id === ME.id ? ' <span class="pill neutral">você</span>' : '') + (m.approved === false ? ' <span class="pill warn">aguardando aprovação</span>' : '') + '</td><td><select class="in" style="min-height:34px" data-mrole="' + m.id + '" aria-label="Função"' + (m.owner ? ' disabled' : '') + '>' + Object.keys(ROLES).map((k) => '<option value="' + k + '"' + (m.role === k ? ' selected' : '') + '>' + ROLES[k] + '</option>').join('') + '</select></td><td>' + (m.role === 'vendas' ? '<select class="in" style="min-height:34px" data-mseller="' + m.id + '" aria-label="Vendedor">' + sellerOpts(m.sellerId || '') + '</select>' : '<span class="hint">—</span>') + '</td><td class="r" style="white-space:nowrap">' + (m.approved === false ? '<button class="btn sm primary" data-mapprove="' + m.id + '">Aprovar</button> ' : '') + (m.owner ? '<span class="pill neutral">dono</span>' : '<button class="btn sm ghost danger" data-mdel="' + m.id + '">Remover</button>') + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="hint">Ninguém entrou ainda. ' + (mode === 'db' || mode === 'cloud' ? (mode === 'cloud' ? 'Mande o link do app e peça para a pessoa criar a conta.' : 'Compartilhe o app e peça para a pessoa abrir o link.') : 'No modo local a equipe não funciona: os dados ficam só neste navegador.') + '</p>') + '</div>';
+    return h;
+  }
+  function vOnboard() {
+    return '<div class="card onboard"><h1>Bem-vindo à Camada</h1><p class="hint" style="font-size:14px">Escolha sua função na equipe. Ela define o que aparece para você e quais avisos você recebe.</p>' +
+      '<div class="seg" role="group" aria-label="Função">' + [['vendas', 'Vendas'], ['producao', 'Produção']].map(([k, l]) => '<button type="button" data-obrole="' + k + '" aria-pressed="' + (obRole === k) + '">' + l + '</button>').join('') + '</div>' +
+      '<p class="hint">' + (obRole === 'vendas' ? 'Você lança vendas, encomendas e leads, vê fotos e preços para mandar ao cliente e recebe aviso quando uma encomenda pode ser entregue.' : 'Você vê o que precisa produzir para cada encomenda, registra a produção e controla filamentos e máquinas.') + '</p>' +
+      '<div class="field"><label for="ob-nick">Como quer ser chamado(a)</label><input class="in" id="ob-nick" value="' + esc(ME.name || '') + '" maxlength="40"></div>' +
+      '<button class="btn primary" id="ob-save">Entrar</button></div>';
+  }
+  async function openPhoto(pid, ctx) {
+    const p = byId('products', pid); if (!p || !p.photoId) return;
+    ctx = ctx || {};
+    const st = set(), r = suggest(productCost(p).total, p.margin !== undefined && p.margin !== '' ? num(p.margin) : num(st.margin), 'direto', 0);
+    const price = num(ctx.price) || (r ? r.price : 0), qty = Math.max(1, Math.floor(num(ctx.qty)) || 1);
+    const cols = (p.filaments || []).length === 1 ? S.filaments.filter((g) => Math.max(0, filStats(g.id).stock) >= num(p.filaments[0].grams) * 2 || readyStock(p.id, null, g.id).free > 0).map((g) => g.color) : [];
+    const msg = '*' + p.name + '*\n' + (price ? brl(price) + ' por unidade' : '') + (qty > 1 ? '\n' + qty + ' unidades: ' + brl(price * qty) : '') + (cols.length ? '\nCores disponíveis: ' + cols.join(', ') : '') + '\nPeça feita em impressão 3D.';
+    const src = photoSrc(p.photoId);
+    let lb = $('#lb'); if (!lb) { lb = document.createElement('dialog'); lb.id = 'lb'; document.body.appendChild(lb); }
+    lb.innerHTML = '<div class="lb-wrap"><div class="lb-img"><img src="' + esc(src) + '" alt="' + esc(p.name) + '"></div><div class="lb-side"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2 style="margin:0">' + esc(p.name) + '</h2><button type="button" class="x" id="lb-close" aria-label="Fechar">✕</button></div>' +
+      '<div class="field"><label for="lb-text">Mensagem para o cliente</label><textarea class="in" id="lb-text">' + esc(msg) + '</textarea></div>' +
+      '<div class="field"><label for="lb-phone">WhatsApp do cliente (opcional)</label><input class="in" id="lb-phone" inputmode="tel" value="' + esc(ctx.phone || '') + '" placeholder="em branco = você escolhe o contato"></div>' +
+      '<div class="row"><button type="button" class="btn primary" id="lb-share">Compartilhar foto</button><a class="btn" id="lb-wa" target="_blank" rel="noopener" href="#">Enviar texto no WhatsApp</a><button type="button" class="btn ghost" id="lb-save">Baixar foto</button></div>' +
+      '<p class="hint" id="lb-hint">"Compartilhar foto" abre o compartilhamento do celular com a foto e o texto (escolha o WhatsApp). Se o aparelho não permitir, a foto é baixada e você anexa na conversa.</p></div></div>';
+    const upd = () => ($('#lb-wa').href = waLink($('#lb-phone').value, $('#lb-text').value));
+    upd(); $('#lb-text').oninput = upd; $('#lb-phone').oninput = upd;
+    $('#lb-close').onclick = () => lb.close();
+    lb.onclick = (e) => { if (e.target === lb) lb.close(); };
+    const fileOf = async () => { const b = await (await fetch(src)).blob(); const ext = (b.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg'); return new File([b], (p.name.normalize('NFD').replace(/[^\w ]/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'produto') + '.' + ext, { type: b.type || 'image/jpeg' }); };
+    const save = async (f) => {
+      try { if (downloadsCap === undefined) downloadsCap = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { downloadsCap = null; }
+      if (downloadsCap) { try { await downloadsCap.save({ filename: f.name, data: f }); $('#lb-hint').textContent = 'Foto salva. Agora toque em "Enviar texto no WhatsApp" e anexe a foto na conversa.'; return; } catch (e) { if (e && e.code === 'declined') return; } }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+      $('#lb-hint').textContent = 'Se a foto não baixou, toque e segure na imagem para salvar. Depois envie o texto e anexe a foto no WhatsApp.';
+    };
+    $('#lb-save').onclick = async () => { try { await save(await fileOf()); } catch (e) { toast('Não foi possível baixar a foto'); } };
+    $('#lb-share').onclick = async () => {
+      let f; try { f = await fileOf(); } catch (e) { toast('Não foi possível carregar a foto'); return; }
+      try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: $('#lb-text').value }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+      await save(f);
+    };
+    lb.showModal();
+  }
+  document.addEventListener('click', (e) => {
+    const img = e.target.closest && e.target.closest('img[data-photo]'); if (!img) return;
+    const inDlg = img.closest('#dlg'), item = img.closest('.deal-item');
+    if (inDlg && !item) return;
+    e.preventDefault();
+    let ctx = {};
+    if (item && dealCtx) { const sel = item.querySelector('[data-dk=productId]'); if (sel) ctx = dealCtx(+sel.dataset.di); }
+    openPhoto(img.dataset.photo, ctx);
+  });
+
+  // ================= Navegação e render =================
+  const VIEWS = [
+    ['painel', 'Painel'], ['avisos', 'Avisos'], ['mensagens', 'Mensagens'], ['encomendas', 'Encomendas'], ['producao', 'Produção'], ['produtos', 'Produtos e preços'], ['filamentos', 'Filamentos'],
+    ['maquinas', 'Máquinas'], ['vendas', 'Vendas'], ['vendedores', 'Vendedores'], ['despesas', 'Despesas'], ['equipe', 'Equipe'], ['ajustes', 'Ajustes']
+  ];
+  let view = 'painel';
+  try { const v = (location.hash || '').slice(1); if (VIEWS.some((x) => x[0] === v)) view = v; else view = localStorage.getItem('camada_ops_view') || 'painel'; } catch (e) {}
+  let renderQueued = false;
+  function scheduleRender() {
+    if (renderQueued) return; renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      const a = document.activeElement;
+      if ($('#dlg').open || (a && a.closest && a.closest('#view') && /INPUT|SELECT|TEXTAREA/.test(a.tagName))) { setTimeout(scheduleRender, 600); return; }
+      render();
+    });
+  }
+  function renderNav() {
+    const al = alerts();
+    const unseen = LIVE.ns.filter((x) => !SEEN[x.key]);
+    const badge = { filamentos: al.filter((a) => a.go === 'filamentos'), maquinas: al.filter((a) => a.go === 'maquinas'), encomendas: al.filter((a) => a.go === 'encomendas'), avisos: unseen, mensagens: unreadMsgs().map(() => ({ level: 'bad' })) };
+    const nav = $('#nav'); const logo = nav.querySelector('.logo').outerHTML;
+    const role = myRole();
+    if (!role) { nav.innerHTML = logo + (mode === 'cloud' ? '<button class="nav-btn" data-logout="1"><span>Sair</span></button>' : ''); return; }
+    nav.innerHTML = logo + VIEWS.filter(([id]) => allowed(id)).map(([id, label]) => {
+      const b = badge[id] || []; const bad = b.some((x) => x.level === 'bad');
+      return '<button class="nav-btn" data-view="' + id + '"' + (view === id ? ' aria-current="page"' : '') + '><span>' + label + '</span>' + (b.length ? '<span class="dot ' + (bad ? 'bad' : 'warn') + '">' + b.length + '</span>' : '') + '</button>';
+    }).join('') + '<div class="who"><span>' + esc(personName(ME.id) === 'Você' ? 'Você' : personName(ME.id)) + ' · <b>' + ROLES[role] + '</b></span>' + (ME.isOwner ? '<label>Ver o app como<select class="in" id="viewas">' + Object.keys(ROLES).map((k) => '<option value="' + k + '"' + (role === k ? ' selected' : '') + '>' + ROLES[k] + '</option>').join('') + '</select></label>' : '') + '</div>' + (installEvt && !isStandalone() ? '<button class="nav-btn" data-install="1"><span>Instalar app</span></button>' : '') + (mode === 'cloud' ? '<button class="nav-btn" data-logout="1"><span>Sair</span></button>' : '') + '<div class="mode">' + (mode === 'cloud' ? (connState === 'SUBSCRIBED' ? '● Sincronizado em tempo real' : '○ Reconectando…') : mode === 'db' ? 'Dados salvos na nuvem do app' : 'Modo local: dados só neste navegador') + '</div>';
+  }
+  $('#nav').addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (!b) return; go(b.dataset.view); });
+  function go(v) { view = v; try { localStorage.setItem('camada_ops_view', v); } catch (e) {} render(); window.scrollTo(0, 0); }
+  function render() {
+    const el = $('#view');
+    if (mode === 'login' || (CLOUD && !sbUser)) { $('#nav').innerHTML = $('#nav .logo') ? $('#nav .logo').outerHTML : ''; el.innerHTML = vLogin(); document.body.classList.add('auth'); return; }
+    document.body.classList.remove('auth');
+    if (mode === 'cloud') {
+      if (!profilesLoaded) { el.innerHTML = '<div class="empty"><b>Conectando…</b></div>'; return; }
+      const m = myMember();
+      if (!m) { renderNav(); el.innerHTML = vOnboard(); return; }
+      if (!m.approved) { renderNav(); el.innerHTML = vPending(); return; }
+    }
+    if (!S.ready) { renderNav(); el.innerHTML = '<div class="empty"><b>Carregando seus dados…</b></div>'; return; }
+    resolveProfiles();
+    if (!myRole()) { renderNav(); el.innerHTML = vOnboard(); return; }
+    if (!allowed(view)) view = (ROLE_VIEWS[myRole()] || ['painel'])[0];
+    liveCheck();
+    el.innerHTML = ({ avisos: vAvisos, mensagens: vMensagens, equipe: vEquipe, painel: vPainel, producao: vProducao, produtos: vProdutos, filamentos: vFilamentos, maquinas: vMaquinas, vendas: vVendas, vendedores: vVendedores, encomendas: vEncomendas, despesas: vDespesas, ajustes: vAjustes })[view]();
+    if (view === 'producao') renderPlan();
+    if (view === 'avisos') { SEEN = {}; LIVE.ns.forEach((n) => (SEEN[n.key] = 1)); saveSeen(); }
+    if (view === 'mensagens') { lastMsgSeen = Date.now(); saveSeen(); const m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight; }
+    renderNav(); updateTitle();
+  }
+  const head = (title, sub, actions) => '<div class="head"><div><h1>' + title + '</h1>' + (sub ? '<p>' + sub + '</p>' : '') + '</div><div class="row">' + (actions || '') + '</div></div>';
+  const empty = (title, text, btn) => '<div class="card empty"><b>' + title + '</b><span>' + text + '</span>' + (btn || '') + '</div>';
+  const filName = (f) => f ? esc(f.material + ' ' + f.color) + (f.brand ? ' <span style="color:var(--muted)">· ' + esc(f.brand) + '</span>' : '') : '<em>excluído</em>';
+  const swatch = (f) => '<span class="sw" style="background:' + esc((f && f.hex) || '#999') + '"></span>';
+  const photoSrc = (id) => /^(data:|https?:)/.test(String(id)) ? String(id) : '/_blob/' + id;
+  const photo = (p) => p.photoId ? '<img src="' + esc(photoSrc(p.photoId)) + '" alt="' + esc(p.name) + '" data-photo="' + esc(p.id) + '" title="Toque para ampliar e compartilhar">' : 'sem foto';
+
+  // ================= Painel =================
+  function vPainel() {
+    const F = finance(), st = set();
+    const thisM = monthKey(today()); const cur = F.rows.find((r) => r.key === thisM) || { net: 0, profit: 0, rev: 0 };
+    const rec = F.invest > 0 ? Math.max(0, Math.min(100, F.tot.profit / F.invest * 100)) : 0;
+    const al = alerts();
+    const sold = S.sales.reduce((s, x) => s + num(x.qty), 0);
+    const byCh = CHANNELS.map((c) => { const xs = S.sales.filter((s) => s.channel === c.id); return { c, qty: xs.reduce((s, x) => s + num(x.qty), 0), net: xs.reduce((s, x) => s + num(x.net), 0) }; }).filter((x) => x.qty > 0);
+    const noData = !S.sales.length && !S.purchases.length && !S.expenses.length;
+    let h = head('Painel', 'Quanto foi investido, quanto voltou e o que precisa de atenção.');
+    h += '<div class="kpis">' +
+      kpi('Investimento total', brl(F.invest), S.machines.length + ' máquina(s) + investimentos lançados', 'hero') +
+      kpi('Lucro acumulado', '<span class="' + (F.tot.profit >= 0 ? 'pos' : 'neg') + '">' + brl(F.tot.profit) + '</span>', 'vendas líquidas − filamento − energia/ajudante − despesas') +
+      kpi('ROI', F.roi === null ? '—' : '<span class="' + (F.roi >= 0 ? 'pos' : 'neg') + '">' + pct(F.roi) + '</span>', 'lucro acumulado ÷ investimento') +
+      kpi('Lucro do mês', '<span class="' + (cur.profit >= 0 ? 'pos' : 'neg') + '">' + brl(cur.profit) + '</span>', 'receita líquida ' + brl(cur.net)) +
+      kpi('Peças vendidas', n1(sold), brl(F.tot.rev) + ' em vendas brutas') + '</div>';
+    h += '<div class="card"><div class="card-head"><h2>Investimento recuperado</h2><span class="num">' + pct(rec) + ' · faltam ' + brl(Math.max(0, F.invest - F.tot.profit)) + '</span></div><div class="bar" role="progressbar" aria-valuenow="' + rec.toFixed(0) + '" aria-valuemin="0" aria-valuemax="100" aria-label="Investimento recuperado"><i style="width:' + rec + '%"></i></div></div>';
+    h += '<div class="card"><div class="card-head"><h2>Atenção</h2><span class="pill ' + (al.length ? (al.some((a) => a.level === 'bad') ? 'bad' : 'warn') : 'good') + '">' + (al.length ? al.length + ' aviso(s)' : 'tudo em dia') + '</span></div>' +
+      (al.length ? '<div class="alerts">' + al.map((a) => '<div class="alert ' + a.level + '"><span>' + esc(a.text) + '</span><button class="btn sm" data-go="' + a.go + '">Abrir</button></div>').join('') + '</div>' : '<p class="hint">Nenhum filamento acabando e nenhuma manutenção vencida.</p>') + '</div>';
+    if (noData) {
+      h += empty('Comece pelos cadastros', 'Cadastre os filamentos e lance as compras, depois cadastre os produtos. Os gráficos aparecem quando houver vendas e despesas.', '<div class="row"><button class="btn primary" data-go="filamentos">Cadastrar filamentos</button><button class="btn" data-go="produtos">Cadastrar produtos</button></div>');
+    } else {
+      h += '<div class="grid g2">' + '<div class="card chart"><h2>Receita líquida e custos por mês</h2>' + chartMonthly(F.rows.slice(-12)) + '<div class="legend"><span><i style="background:var(--chart-a)"></i>Receita líquida (após taxas)</span><span><i style="background:var(--chart-b)"></i>Custos (filamento, energia, ajudante, despesas)</span></div></div>' +
+        '<div class="card chart"><h2>Retorno do investimento</h2>' + chartRoi(F.rows.slice(-12), F.invest) + '<div class="legend"><span><i style="background:var(--chart-a)"></i>Lucro acumulado</span><span><i style="background:var(--chart-c)"></i>Investimento total</span></div></div></div>';
+      h += '<div class="grid g2"><div class="card"><h2>Vendas por canal</h2>' + (byCh.length ? '<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>Canal</th><th class="r">Peças</th><th class="r">Receita líquida</th></tr></thead><tbody>' + byCh.map((x) => '<tr><td>' + x.c.name + '</td><td class="r num">' + n1(x.qty) + '</td><td class="r num">' + brl(x.net) + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="hint">Sem vendas ainda.</p>') + '</div>' +
+        '<div class="card"><h2>Para onde vai o dinheiro</h2>' + chartCosts() + '</div></div>';
+    }
+    return h;
+  }
+  const kpi = (label, value, sub, cls) => '<div class="kpi ' + (cls || '') + '"><span>' + label + '</span><b>' + value + '</b><small>' + sub + '</small></div>';
+  function chartMonthly(rows) {
+    if (!rows.length) return '<p class="hint">Sem movimentação ainda.</p>';
+    const W = 560, H = 230, L = 56, B = 28, T = 10, R = 8;
+    const max = Math.max(1, ...rows.map((r) => Math.max(r.net, r.costs)));
+    const bw = (W - L - R) / rows.length, y = (v) => T + (H - T - B) * (1 - v / max);
+    const ticks = [0, max / 2, max];
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Receita líquida e custos por mês">';
+    ticks.forEach((t) => { s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (y(t) + 4) + '" text-anchor="end">' + shortBrl(t) + '</text>'; });
+    rows.forEach((r, i) => {
+      const x = L + i * bw, w = Math.min(18, bw / 2 - 3);
+      s += '<rect x="' + (x + bw / 2 - w - 1) + '" y="' + y(r.net) + '" width="' + w + '" height="' + (y(0) - y(r.net)) + '" rx="2" fill="var(--chart-a)"><title>' + monthLabel(r.key) + ' · receita líquida ' + brl(r.net) + '</title></rect>';
+      s += '<rect x="' + (x + bw / 2 + 1) + '" y="' + y(r.costs) + '" width="' + w + '" height="' + (y(0) - y(r.costs)) + '" rx="2" fill="var(--chart-b)"><title>' + monthLabel(r.key) + ' · custos ' + brl(r.costs) + '</title></rect>';
+      s += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + monthLabel(r.key) + '</text>';
+    });
+    return s + '</svg>';
+  }
+  function chartRoi(rows, invest) {
+    if (!rows.length) return '<p class="hint">Sem movimentação ainda.</p>';
+    const W = 560, H = 230, L = 56, B = 28, T = 14, R = 12;
+    const vals = rows.map((r) => r.cum).concat([0, invest]);
+    const lo = Math.min(...vals), hi = Math.max(...vals) || 1;
+    const x = (i) => rows.length === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / (rows.length - 1);
+    const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo || 1));
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Lucro acumulado comparado ao investimento">';
+    [lo, 0, hi].filter((v, i, a) => a.indexOf(v) === i && (v === 0 || Math.abs(v) > (hi - lo) * 0.08)).forEach((t) => { s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (y(t) + 4) + '" text-anchor="end">' + shortBrl(t) + '</text>'; });
+    if (invest > 0) s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(invest) + '" y2="' + y(invest) + '" stroke="var(--chart-c)" stroke-dasharray="5 4" stroke-width="2"/><text x="' + (W - R) + '" y="' + (y(invest) - 6) + '" text-anchor="end" style="fill:var(--chart-c)">investimento ' + shortBrl(invest) + '</text>';
+    s += '<polyline fill="none" stroke="var(--chart-a)" stroke-width="2.5" points="' + rows.map((r, i) => x(i) + ',' + y(r.cum)).join(' ') + '"/>';
+    rows.forEach((r, i) => { s += '<circle cx="' + x(i) + '" cy="' + y(r.cum) + '" r="3.5" fill="var(--chart-a)"><title>' + monthLabel(r.key) + ' · lucro acumulado ' + brl(r.cum) + '</title></circle><text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + monthLabel(r.key) + '</text>'; });
+    const last = rows[rows.length - 1];
+    s += '<text x="' + Math.min(x(rows.length - 1), W - R - 4) + '" y="' + (y(last.cum) - 8) + '" text-anchor="end" style="fill:var(--chart-a);font-weight:600">' + shortBrl(last.cum) + '</text>';
+    return s + '</svg>';
+  }
+  function chartCosts() {
+    const items = [
+      ['Filamento', S.purchases.reduce((s, p) => s + num(p.price), 0)],
+      ['Taxas dos canais e frete', S.sales.reduce((s, x) => s + num(x.fees) + num(x.shipping), 0)],
+      ['Comissões de vendedores', S.sales.reduce((s, x) => s + num(x.commission), 0)],
+      ['Energia e ajudante (estimado)', S.productions.reduce((s, p) => s + num(p.energyCost) + num(p.helperCost), 0)]
+    ].concat(EXP_CATS.map((c) => [c, S.expenses.filter((e) => e.kind !== 'investimento' && e.category === c).reduce((s, e) => s + num(e.amount), 0)])).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]);
+    if (!items.length) return '<p class="hint">Sem custos lançados.</p>';
+    const max = items[0][1], tot = items.reduce((s, x) => s + x[1], 0);
+    return '<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">' + items.map(([k, v], i) => '<div><div class="row" style="justify-content:space-between;font-size:13px"><span>' + esc(k) + '</span><span class="num">' + brl(v) + ' · ' + pct(v / tot * 100) + '</span></div><div class="bar" style="margin-top:4px"><i style="width:' + (v / max * 100) + '%;background:' + (i === 0 ? 'var(--chart-a)' : 'var(--chart-b)') + '"></i></div></div>').join('') + '</div>';
+  }
+  const shortBrl = (v) => (Math.abs(v) >= 1000 ? 'R$ ' + n1(v / 1000, 1) + ' mil' : 'R$ ' + n1(v));
+
+  // ================= Produção =================
+  let plan = [{ productId: '', qty: 1 }];
+  function vProducao() {
+    let h = head('Produção', 'Monte o lote, veja se o filamento em estoque dá conta e registre o que foi impresso. O consumo baixa o estoque cor por cor.');
+    if (!S.products.length) return h + empty('Nenhum produto cadastrado', 'Cadastre um produto com os gramas de cada filamento para planejar a produção.', '<button class="btn primary" data-go="produtos">Cadastrar produto</button>');
+    h += '<div class="card"><div class="card-head"><h2>Planejar um lote</h2><button class="btn sm" id="plan-add">+ Produto</button></div><div id="plan-rows" style="display:flex;flex-direction:column;gap:8px"></div>' +
+      '<div style="margin-top:14px" id="plan-result"></div>' +
+      '<div class="row" style="margin-top:14px"><div class="field" style="width:180px"><label for="plan-machine">Máquina</label><select class="in" id="plan-machine">' + S.machines.map((m) => '<option value="' + m.id + '">' + esc(m.name) + '</option>').join('') + '<option value="">Sem máquina</option></select></div><div class="field" style="width:160px"><label for="plan-date">Data</label><input class="in" type="date" id="plan-date" value="' + today() + '"></div><button class="btn primary" id="plan-save" style="align-self:flex-end">Registrar produção</button></div></div>';
+    const stockRows = S.products.map((p) => Object.assign({ p }, readyStock(p.id))).filter((x) => x.produced > 0 || x.reserved > 0);
+    h += '<div class="card"><h2>Peças prontas em estoque</h2>' + (stockRows.length ? '<div class="tbl-wrap"><table><thead><tr><th>Produto</th><th class="r">Produzidas</th><th class="r">Vendidas</th><th class="r">Em estoque</th><th class="r">Reservadas em encomendas</th><th class="r">Livres para venda</th></tr></thead><tbody>' + stockRows.map((x) => '<tr><td><span class="row" style="flex-wrap:nowrap"><span class="thumb" style="width:36px;height:36px">' + photo(x.p) + '</span>' + esc(x.p.name) + '</span></td><td class="r num">' + n1(x.produced) + '</td><td class="r num">' + n1(x.sold) + '</td><td class="r num">' + n1(x.onHand) + '</td><td class="r num">' + n1(x.reserved) + '</td><td class="r num"><b>' + n1(x.free) + '</b>' + (Object.keys(x.vars).length > 1 || (x.p.filaments || []).length > 1 ? '<br><small class="hint">' + Object.keys(x.vars).filter((k) => x.vars[k].free > 0).map((k) => varName(x.p, k) + ': ' + x.vars[k].free).join('<br>') + '</small>' : '') + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="hint">Quando você registrar produções, as peças prontas aparecem aqui e são usadas primeiro nas vendas e encomendas.</p>') + '</div>';
+    const hist = S.productions.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 60);
+    h += '<div class="card"><h2>Histórico de produção</h2>' + (hist.length ? '<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th class="r">Qtd.</th><th>Filamento usado</th><th class="r">Tempo</th><th class="r">Energia + ajudante</th><th></th></tr></thead><tbody>' + hist.map((p) => {
+      const pr = byId('products', p.productId);
+      return '<tr><td class="num">' + fmtDate(p.date) + '</td><td>' + (p.kind === 'perda' ? '<span class="pill warn">perda</span> ' : p.kind === 'ajuste' ? '<span class="pill neutral">acerto de estoque</span> ' : '') + esc(pr ? pr.name : (p.note || '—')) + '</td><td class="r num">' + n1(p.qty) + '</td><td>' + (p.use || []).map((u) => { const f = byId('filaments', u.filamentId); return swatch(f) + ' ' + grams(u.grams); }).join(' &nbsp; ') + '</td><td class="r num">' + n1(num(p.minutes) / 60, 1) + ' h</td><td class="r num">' + brl(num(p.energyCost) + num(p.helperCost)) + '</td><td class="r"><button class="btn sm ghost danger" data-del-prod="' + p.id + '" aria-label="Excluir registro">Excluir</button></td></tr>';
+    }).join('') + '</tbody></table></div>' : '<p class="hint">Nada registrado ainda.</p>') + '</div>';
+    return h;
+  }
+  function renderPlan() {
+    const rowsEl = $('#plan-rows'); if (!rowsEl) return;
+    rowsEl.innerHTML = plan.map((l, i) => {
+      const p = byId('products', l.productId);
+      return '<div class="plan-row"><select class="in" data-pi="' + i + '" data-k="productId" aria-label="Produto"><option value="">Escolha o produto</option>' + S.products.map((x) => '<option value="' + x.id + '"' + (x.id === l.productId ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select>' +
+        '<input class="in num" type="number" min="1" step="1" value="' + esc(l.qty) + '" data-pi="' + i + '" data-k="qty" aria-label="Quantidade">' +
+        '<span class="plan-max hint">' + (p ? 'prontas: <b>' + n1(readyStock(p.id).onHand) + '</b> · dá para fazer até <b>' + n1(maxQty(p)) + '</b>' + (l.colors && Object.keys(l.colors).length ? ' · <span class="pill neutral">cores da encomenda</span>' : '') : '') + '</span>' +
+        '<button class="x" data-prm="' + i + '" aria-label="Remover linha">✕</button></div>';
+    }).join('');
+    renderPlanResult();
+  }
+  function renderPlanResult() {
+    const el = $('#plan-result'); if (!el) return;
+    const lines = plan.filter((l) => l.productId && num(l.qty) > 0);
+    if (!lines.length) { el.innerHTML = '<p class="hint">Escolha produtos e quantidades para ver o filamento necessário.</p>'; return; }
+    const res = canProduce(lines);
+    const missing = res.filter((r) => r.missing > 0);
+    let mins = 0, energy = 0;
+    lines.forEach((l) => { const p = byId("products", l.productId); const c = productCost(p, l.colors); mins += num(p.printMinutes) * num(l.qty); energy += (c.energy + c.helper) * num(l.qty); });
+    el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>Filamento</th><th class="r">Necessário</th><th class="r">Em estoque</th><th class="r">Falta</th><th>Situação</th></tr></thead><tbody>' + res.map((r) => {
+      const f = byId('filaments', r.fid);
+      const fs = filStats(r.fid);
+      return '<tr><td>' + swatch(f) + ' ' + filName(f) + '</td><td class="r num">' + grams(r.need) + '</td><td class="r num">' + grams(r.stock) + '<br><small class="hint">comprado ' + grams(fs.bought) + ' − usado ' + grams(fs.used) + '</small></td><td class="r num">' + (r.missing > 0 ? grams(r.missing) : '—') + '</td><td>' + (r.missing > 0 ? '<span class="pill bad">faltam ' + grams(r.missing) + '</span>' : '<span class="pill good">dá para produzir</span>') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' +
+      '<p class="hint" style="margin-top:8px">Inclui ' + n1(set().failPct) + '% de margem para falhas. Tempo de impressão: <b class="num">' + n1(mins / 60, 1) + ' h</b> · energia e ajudante: <b class="num">' + brl(energy) + '</b>.</p>' +
+      (missing.length ? '<div class="alert bad" style="margin-top:10px;flex-direction:column;align-items:stretch"><span><b>Falta filamento para este lote.</b> O aviso some sozinho quando a compra for registrada no filamento certo.</span>' + missing.map((r) => { const f = byId('filaments', r.fid); const spools = Math.ceil(r.missing / 1000); return '<span class="row" style="justify-content:space-between;gap:8px">' + (f ? esc(f.material + ' ' + f.color + (f.brand ? ' · ' + f.brand : '')) : 'filamento') + ': faltam ' + grams(r.missing) + ' — ' + spools + ' rolo(s) de 1 kg (≈ ' + brl(spools * 1000 * r.cpg) + ')<button class="btn sm" data-buy="' + r.fid + '" data-rolls="' + spools + '">Registrar compra</button>' + (r.stock < 0 ? '<button class="btn sm ghost" data-adjust="' + r.fid + '">Acertar estoque</button>' : '') + '</span>' + (r.stock < 0 ? '<span class="hint">O estoque está negativo (' + grams(r.stock) + '): foram registradas produções além do que foi comprado. Se ainda tem filamento no rolo, toque em "Acertar estoque" e informe o peso real.</span>' : ''); }).join('') + (dupWarn() ? '<span class="hint">' + dupWarn() + '</span>' : '') + '</div>' : '');
+  }
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.dataset && t.dataset.pi !== undefined) { plan[+t.dataset.pi][t.dataset.k] = t.dataset.k === 'qty' ? Math.max(0, Math.floor(num(t.value))) : t.value; if (t.dataset.k === 'productId') renderPlan(); else renderPlanResult(); }
+  });
+  document.addEventListener('input', (e) => { const t = e.target; if (t.id === 'msg-text') msgDraft.text = t.value; });
+  document.addEventListener('keydown', (e) => { if (e.key !== 'Enter' || mode !== 'login' || !e.target.closest || !e.target.closest('.login')) return; const b = $('#l-login, #l-signup, #l-reset, #l-newpass'); if (b) { e.preventDefault(); b.click(); } });
+  document.addEventListener('change', (e) => { if (e.target.id === 'bk-file' && e.target.files[0]) { importBackup(e.target.files[0]); e.target.value = ''; } });
+  document.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.id === 'viewas') { viewAs = t.value === 'gestao' ? '' : t.value; try { localStorage.setItem('camada_viewas', viewAs); } catch (er) {} prevKeys = null; render(); return; }
+    if (t.id === 'msg-to') msgDraft.to = t.value;
+    if (t.id === 'msg-order') msgDraft.orderId = t.value;
+    if (t.dataset && t.dataset.mrole) { const m = S.members.find((x) => x.id === t.dataset.mrole); if (m) saveDoc('members', Object.assign({}, m, { role: t.value })).then(() => toast('Função atualizada')); return; }
+    if (t.dataset && t.dataset.mseller) { const m = S.members.find((x) => x.id === t.dataset.mseller); if (m) saveDoc('members', Object.assign({}, m, { sellerId: t.value })).then(() => toast('Vendedor ligado')); return; }
+    if (t.dataset && t.dataset.pi !== undefined && t.dataset.k === 'productId') { plan[+t.dataset.pi].productId = t.value; renderPlan(); }
+    if (t.dataset && t.dataset.ost) {
+      const o = byId('orders', t.dataset.ost); if (!o) return;
+      if (t.value === 'entregue') {
+        confirmDlg('Marcar como entregue?', 'A venda será lançada em Vendas, com taxa do canal e comissão do vendedor.', 'Entregar e lançar venda').then((ok) => { if (ok) deliverOrder(o); else t.value = o.status; });
+      } else saveDoc('orders', Object.assign({}, o, { status: t.value })).then(() => { toast('Status atualizado'); if (t.value === 'pronta') postAuto('vendas', 'Encomenda de ' + o.client + ' marcada como pronta.', o.id); });
+      return;
+    }
+    if (t.dataset && t.dataset.margin) {
+      const p = byId('products', t.dataset.margin); if (!p) return;
+      const m = Math.min(90, Math.max(0, num(t.value)));
+      saveDoc('products', Object.assign({}, p, { margin: m })).then(() => { if (mode === 'local') render(); else toast('Margem de ' + m + '% salva'); });
+    }
+  });
+  async function savePlan() {
+    const lines = plan.filter((l) => l.productId && num(l.qty) > 0);
+    if (!lines.length) return toast('Escolha ao menos um produto');
+    const res = canProduce(lines);
+    if (res.some((r) => r.missing > 0)) {
+      const ok = await confirmDlg('Falta filamento', 'O estoque registrado não cobre este lote. Registrar mesmo assim? O estoque ficará negativo até você lançar a compra.', 'Registrar mesmo assim');
+      if (!ok) return;
+    }
+    const st = set(), f = num(st.failPct) / 100, date = $('#plan-date').value || today(), mid = $('#plan-machine').value;
+    for (const l of lines) {
+      const p = byId('products', l.productId), cm = l.colors || {}; const c = productCost(Object.assign({}, p, { machineId: mid || p.machineId }), cm);
+      await saveDoc('productions', { kind: 'produção', date, productId: p.id, qty: num(l.qty), machineId: mid, minutes: num(p.printMinutes) * num(l.qty),
+        use: (p.filaments || []).map((u) => ({ filamentId: cm[u.filamentId] || u.filamentId, grams: Math.round(num(u.grams) * num(l.qty) * (1 + f) * 10) / 10 })), orderId: l.orderId || '',
+        energyCost: Math.round(c.energy * num(l.qty) * 100) / 100, helperCost: Math.round(c.helper * num(l.qty) * 100) / 100, createdAt: Date.now() });
+    }
+    const byOrder = {}; lines.forEach((l) => { if (l.orderId) byOrder[l.orderId] = (byOrder[l.orderId] || 0) + num(l.qty); });
+    for (const oid of Object.keys(byOrder)) { const o = byId('orders', oid); if (o) await postAuto('vendas', 'Produção registrada para a encomenda de ' + o.client + ': ' + byOrder[oid] + ' peça(s).', oid); }
+    plan = [{ productId: '', qty: 1 }];
+    toast('Produção registrada e estoque atualizado'); render();
+  }
+
+  // ================= Produtos =================
+  function vProdutos() {
+    const st = set();
+    let h = head('Produtos e preços', 'Custo de cada peça e o preço sugerido por canal. A margem de lucro é editável por produto e conta sobre o preço de venda, já descontadas as taxas.', '<button class="btn primary" data-new="product">+ Novo produto</button>');
+    if (!S.filaments.length) h += '<div class="banner">Cadastre os filamentos primeiro: o custo de cada peça vem do preço por grama das suas compras.</div>';
+    if (!S.products.length) return h + empty('Nenhum produto ainda', 'Cadastre a peça com foto, gramas de cada filamento e tempo de impressão (o fatiador mostra os dois).', '<button class="btn primary" data-new="product">Cadastrar o primeiro produto</button>');
+    h += '<div class="prod-grid">' + S.products.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map((p) => {
+      const c = productCost(p), m = p.margin !== undefined && p.margin !== '' ? num(p.margin) : num(st.margin);
+      const chans = ['ml', 'shopee', 'tiktok', 'instagram', 'site', 'vendedor'].map((ch) => { const r = suggest(c.total, m, ch, ch === 'vendedor' ? st.vendedor.commission : 0); const nm = CHANNELS.find((x) => x.id === ch).short; return '<div><small>' + nm + '</small><b>' + (r ? brl(r.price) : '—') + '</b><em>' + (r ? 'lucro ' + brl(r.profit) : 'margem alta demais') + '</em></div>'; }).join('');
+      const can = maxQty(p);
+      return '<article class="card prod"><div class="prod-top"><div class="thumb">' + photo(p) + '</div><div style="min-width:0;flex:1"><h2>' + esc(p.name) + '</h2><p class="hint">' + (p.filaments || []).map((u) => { const f = byId('filaments', u.filamentId); return swatch(f) + ' ' + (u.part ? esc(u.part) + ' ' : '') + n1(u.grams, num(u.grams) % 1 ? 1 : 0) + ' g'; }).join(' · ') + ' · ' + n1(num(p.printMinutes) / 60, 1) + ' h</p><p class="hint">Prontas em estoque: <b>' + n1(readyStock(p.id).free) + '</b> · filamento dá para <b>' + n1(can) + '</b></p></div></div>' +
+        '<div class="kv"><span>Filamento</span><span>' + brl(c.fil) + '</span><span>Energia</span><span>' + brl(c.energy) + '</span><span>Falhas (' + n1(st.failPct) + '%)</span><span>' + brl(c.fail) + '</span><span>Ajudante</span><span>' + brl(c.helper) + '</span><span>Embalagem e outros</span><span>' + brl(c.pack + c.other) + '</span><span class="total">Custo por peça</span><span class="total">' + brl(c.total) + '</span></div>' +
+        '<div class="row" style="justify-content:space-between"><span class="lbl">Preço sugerido</span><label class="row" style="gap:6px;font-size:12px;color:var(--muted)">Margem <input class="margin-in" data-margin="' + p.id + '" value="' + esc(m) + '" inputmode="decimal" aria-label="Margem de lucro em %"> %</label></div><div class="chan">' + chans + '</div>' +
+        '<div class="row"><button class="btn sm" data-edit-product="' + p.id + '">Editar</button><button class="btn sm" data-sell="' + p.id + '">Lançar venda</button><button class="btn sm ghost danger" data-del-product="' + p.id + '">Excluir</button></div></article>';
+    }).join('') + '</div>';
+    h += '<p class="hint">Taxas usadas: ML ' + n1(st.ml.pct) + '% + ' + brl(st.ml.fixedUnder) + ' abaixo de ' + brl(st.ml.threshold) + ' (acima, frete grátis estimado em ' + brl(st.ml.freeShip) + '); Shopee 20% + R$ 4,50 até R$ 79,99 e 14% + valor fixo acima; TikTok Shop ' + n1(st.tiktok.pctUnder) + '% + ' + brl(st.tiktok.fixedUnder) + ' abaixo de ' + brl(st.tiktok.under) + ', ' + n1(st.tiktok.pctOver) + '% + ' + brl(st.tiktok.fixedOver) + ' acima' + (st.tiktok.shipProgram ? ', mais ' + n1(st.tiktok.shipPct) + '% do programa de frete' : '') + '; Instagram ' + n1(st.instagram.payPct, 2) + '% de pagamento; site ' + n1(st.site.payPct, 2) + '% de pagamento; vendedor com comissão padrão de ' + n1(st.vendedor.commission, 1) + '% (cada vendedor tem a sua). Ajuste em <a href="#ajustes" data-go="ajustes">Ajustes</a>.</p>';
+    return h;
+  }
+  function productDialog(p) {
+    p = p ? JSON.parse(JSON.stringify(p)) : { name: '', filaments: [{ filamentId: (S.filaments[0] || {}).id || '', grams: '' }], printMinutes: '', helperMinutes: '', packaging: '', otherCost: '', machineId: (S.machines[0] || {}).id || '', photoId: '' };
+    const filOpts = (sel) => S.filaments.map((f) => '<option value="' + f.id + '"' + (f.id === sel ? ' selected' : '') + '>' + esc(f.material + ' ' + f.color + (f.brand ? ' · ' + f.brand : '')) + '</option>').join('');
+    const drawFils = () => (p.filaments || []).map((u, i) => '<div class="fil-row"><select class="in" data-fi="' + i + '" data-fk="filamentId" aria-label="Filamento">' + filOpts(u.filamentId) + '</select><input class="in part" data-fi="' + i + '" data-fk="part" value="' + esc(u.part || '') + '" placeholder="parte (ex.: base)" aria-label="Parte da peça"><input class="in num" data-fi="' + i + '" data-fk="grams" value="' + esc(u.grams) + '" inputmode="decimal" placeholder="gramas" aria-label="Gramas"><button type="button" class="x" data-frm="' + i + '" aria-label="Remover filamento">✕</button></div>').join('');
+    openDlg((p.id ? 'Editar' : 'Novo') + ' produto',
+      '<div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div class="thumb" id="ph-prev">' + photo(p) + '</div><div class="field" style="flex:1"><label for="ph-in">Foto</label>' + (assets || mode === 'local' || mode === 'cloud' ? '<input class="in" type="file" id="ph-in" accept="image/jpeg,image/png,image/webp" style="padding-top:8px">' : '<p class="hint">O envio de fotos fica disponível para quem pode editar o app.</p>') + '<p class="hint" id="ph-status"></p></div></div>' +
+      '<div class="field"><label for="p-name">Nome</label><input class="in" id="p-name" required value="' + esc(p.name) + '"></div>' +
+      '<div class="field"><span class="lbl">Cores da peça: filamento, parte (base, nome, detalhe…) e gramas de cada uma, como o fatiador mostra</span><div id="p-fils" style="display:flex;flex-direction:column;gap:6px">' + (S.filaments.length ? drawFils() : '<p class="hint">Cadastre filamentos antes.</p>') + '</div>' + (S.filaments.length ? '<button type="button" class="btn sm" id="p-fil-add" style="align-self:flex-start;margin-top:4px">+ Outra cor</button>' : '') + '</div>' +
+      '<div class="fg3"><div class="field"><label for="p-min">Tempo de impressão (min)</label><input class="in num" id="p-min" inputmode="numeric" value="' + esc(p.printMinutes) + '"></div><div class="field"><label for="p-help">Ajudante (min por peça)</label><input class="in num" id="p-help" inputmode="numeric" value="' + esc(p.helperMinutes) + '" placeholder="0"></div><div class="field"><label for="p-mach">Máquina</label><select class="in" id="p-mach">' + S.machines.map((m) => '<option value="' + m.id + '"' + (m.id === p.machineId ? ' selected' : '') + '>' + esc(m.name) + '</option>').join('') + '<option value="">—</option></select></div></div>' +
+      '<div class="fg"><div class="field"><label for="p-hpiece">Ajudante: valor por peça (R$)</label><input class="in num" id="p-hpiece" inputmode="decimal" value="' + esc(p.helperPiece || '') + '" placeholder="0,00"></div><p class="hint" style="align-self:end">Use se o ajudante recebe por peça (acabamento, montagem, embalagem). Soma com os minutos × valor da hora.</p></div>' +
+      '<div class="fg3"><div class="field"><label for="p-pack">Embalagem (R$)</label><input class="in num" id="p-pack" inputmode="decimal" value="' + esc(p.packaging) + '" placeholder="' + n1(set().packaging, 2) + '"></div><div class="field"><label for="p-other">Outros custos (R$)</label><input class="in num" id="p-other" inputmode="decimal" value="' + esc(p.otherCost) + '" placeholder="0,00"></div><div class="field"><label for="p-margin">Margem (%)</label><input class="in num" id="p-margin" inputmode="decimal" value="' + esc(p.margin !== undefined ? p.margin : '') + '" placeholder="' + n1(set().margin) + '"></div></div>',
+      async (form) => {
+        collectFils();
+        const out = Object.assign({}, p, { name: $('#p-name').value.trim(), printMinutes: num($('#p-min').value), helperMinutes: num($('#p-help').value), helperPiece: num($('#p-hpiece').value), machineId: $('#p-mach').value,
+          packaging: $('#p-pack').value.trim() === '' ? '' : num($('#p-pack').value), otherCost: num($('#p-other').value), margin: $('#p-margin').value.trim() === '' ? '' : num($('#p-margin').value),
+          filaments: (p.filaments || []).filter((u) => u.filamentId && num(u.grams) > 0).map((u) => ({ filamentId: u.filamentId, part: String(u.part || '').trim(), grams: num(u.grams) })) });
+        if (!out.name) { toast('Dê um nome ao produto'); return false; }
+        await saveDoc('products', out); toast('Produto salvo'); return true;
+      });
+    function collectFils() { $$('#p-fils [data-fi]').forEach((el) => { p.filaments[+el.dataset.fi][el.dataset.fk] = el.value; }); }
+    const add = $('#p-fil-add'); if (add) add.onclick = () => { collectFils(); p.filaments.push({ filamentId: (S.filaments[0] || {}).id, grams: '' }); $('#p-fils').innerHTML = drawFils(); };
+    $('#p-fils').addEventListener('click', (e) => { const b = e.target.closest('[data-frm]'); if (!b) return; collectFils(); p.filaments.splice(+b.dataset.frm, 1); $('#p-fils').innerHTML = drawFils(); });
+    const fin = $('#ph-in');
+    if (fin) fin.onchange = async () => {
+      const file = fin.files[0]; if (!file) return;
+      $('#ph-status').textContent = 'Enviando foto…';
+      try {
+        const blob = await shrink(file, 1000);
+        if (mode === 'cloud') { const path = 'produtos/' + uid() + '.jpg'; const up = await sb.storage.from('fotos').upload(path, blob, { contentType: 'image/jpeg', upsert: false }); if (up.error) throw up.error; const url = sb.storage.from('fotos').getPublicUrl(path).data.publicUrl; p.photoId = url; $('#ph-prev').innerHTML = '<img src="' + esc(url) + '" alt="">'; }
+        else if (assets) { const r = await assets.upload(blob, { type: 'image/jpeg' }); p.photoId = r.id; $('#ph-prev').innerHTML = '<img src="' + esc(r.url) + '" alt="">'; }
+        else { const url = await blobToDataUrl(await shrink(file, 420)); p.photoId = url; $('#ph-prev').innerHTML = '<img src="' + url + '" alt="">'; }
+        $('#ph-status').textContent = 'Foto pronta. Salve o produto.';
+      } catch (e) { $('#ph-status').textContent = e && e.code === 'too_large' ? 'Foto grande demais.' : 'Não foi possível enviar a foto.'; }
+    };
+  }
+  function shrink(file, max) {
+    return new Promise((res, rej) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob((b) => (b ? res(b) : rej(new Error('img'))), 'image/jpeg', 0.85); };
+      img.onerror = () => rej(new Error('img')); img.src = url;
+    });
+  }
+  const blobToDataUrl = (b) => new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+
+  // ================= Filamentos =================
+  function vFilamentos() {
+    let h = head('Filamentos', 'Estoque por cor: o que foi comprado menos o que as produções consumiram. O aviso de compra usa o estoque mínimo e o ritmo dos últimos 30 dias.',
+      '<button class="btn" data-new="purchase"' + (S.filaments.length ? '' : ' disabled') + '>Registrar compra</button><button class="btn" data-new="loss"' + (S.filaments.length ? '' : ' disabled') + '>Lançar perda</button><button class="btn" data-new="adjust"' + (S.filaments.length ? '' : ' disabled') + '>Acertar estoque</button><button class="btn primary" data-new="filament">+ Novo filamento</button>');
+    if (!S.filaments.length) return h + empty('Nenhum filamento cadastrado', 'Cadastre cada material e cor que você usa (PLA preto, PETG branco…) e depois lance as compras.', '<button class="btn primary" data-new="filament">Cadastrar filamento</button>');
+    const list = S.filaments.map((f) => Object.assign({ f }, filStats(f.id))).sort((a, b) => ({ bad: 0, warn: 1, good: 2 }[a.status] - { bad: 0, warn: 1, good: 2 }[b.status]) || a.f.material.localeCompare(b.f.material));
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Filamento</th><th class="r">Em estoque</th><th>Nível</th><th class="r">Usado em 30 dias</th><th class="r">Dura até</th><th class="r">Custo/g</th><th>Situação</th><th></th></tr></thead><tbody>' + list.map((x) => {
+      const ref = Math.max(x.min * 2, 1000, x.stock); const w = Math.max(0, Math.min(100, x.stock / ref * 100));
+      return '<tr><td>' + swatch(x.f) + ' ' + filName(x.f) + '</td><td class="r num">' + grams(x.stock) + '</td><td style="min-width:110px"><div class="bar"><i style="width:' + w + '%;background:' + (x.status === 'bad' ? 'var(--bad)' : x.status === 'warn' ? 'var(--warn)' : 'var(--good)') + '"></i></div><small class="hint">mín. ' + grams(x.min) + '</small></td><td class="r num">' + grams(x.used30) + '</td><td class="r num">' + (x.daysLeft === null ? '—' : x.daysLeft + ' dias') + '</td><td class="r num">' + brl(x.cpg).replace('R$', 'R$') + '</td><td>' + (x.status === 'bad' ? '<span class="pill bad">sem estoque</span>' : x.status === 'warn' ? '<span class="pill warn">comprar</span>' : '<span class="pill good">ok</span>') + '</td><td class="r"><button class="btn sm ghost" data-edit-fil="' + x.f.id + '">Editar</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+    if (dupWarn()) h += '<div class="alert warn"><span>' + esc(dupWarn()) + '</span></div>';
+    const pur = S.purchases.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 50);
+    h += '<div class="card"><h2>Compras de filamento</h2>' + (pur.length ? '<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Filamento</th><th class="r">Quantidade</th><th class="r">Valor</th><th class="r">R$/kg</th><th></th></tr></thead><tbody>' + pur.map((p) => { const f = byId('filaments', p.filamentId); return '<tr><td class="num">' + fmtDate(p.date) + '</td><td>' + swatch(f) + ' ' + filName(f) + '</td><td class="r num">' + grams(p.grams) + '</td><td class="r num">' + brl(p.price) + '</td><td class="r num">' + brl(num(p.price) / Math.max(1, num(p.grams)) * 1000) + '</td><td class="r"><button class="btn sm ghost danger" data-del-pur="' + p.id + '">Excluir</button></td></tr>'; }).join('') + '</tbody></table></div>' : '<p class="hint">Nenhuma compra lançada. O estoque só existe depois da primeira compra.</p>') + '</div>';
+    return h;
+  }
+  function dupWarn() {
+    const seen = {}, d = [];
+    S.filaments.forEach((f) => { const k = (f.material + ' ' + f.color).trim().toLowerCase(); if (seen[k]) d.push(f.material + ' ' + f.color); seen[k] = 1; });
+    return d.length ? 'Atenção: há mais de um cadastro de ' + [...new Set(d)].join(', ') + '. Confira se a compra foi lançada no mesmo cadastro usado no produto (veja a marca ao lado da cor).' : '';
+  }
+  function filamentDialog(f) {
+    f = f || { material: 'PLA', color: '', hex: '#2C2F36', brand: '', minStock: 300 };
+    openDlg((f.id ? 'Editar' : 'Novo') + ' filamento',
+      '<div class="fg"><div class="field"><label for="f-mat">Material</label><select class="in" id="f-mat">' + MATERIALS.map((m) => '<option' + (m === f.material ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></div><div class="field"><label for="f-brand">Marca</label><input class="in" id="f-brand" value="' + esc(f.brand) + '" placeholder="Ex.: Voolt, 3D Fila"></div></div>' +
+      '<div class="fg"><div class="field"><label for="f-color">Cor</label><input class="in" id="f-color" required value="' + esc(f.color) + '" placeholder="Ex.: Preto"></div><div class="field"><label for="f-hex">Amostra</label><input class="in" type="color" id="f-hex" value="' + esc(f.hex || '#2C2F36') + '" style="padding:4px"></div></div>' +
+      '<div class="field"><label for="f-min">Estoque mínimo (g) — abaixo disso aparece o aviso de compra</label><input class="in num" id="f-min" inputmode="numeric" value="' + esc(f.minStock) + '"></div>' +
+      (f.id ? '<button type="button" class="btn sm ghost danger" id="f-del" style="align-self:flex-start">Excluir filamento</button>' : ''),
+      async () => {
+        const out = Object.assign({}, f, { material: $('#f-mat').value, brand: $('#f-brand').value.trim(), color: $('#f-color').value.trim(), hex: $('#f-hex').value, minStock: num($('#f-min').value) });
+        if (!out.color) { toast('Informe a cor'); return false; }
+        await saveDoc('filaments', out); toast('Filamento salvo'); return true;
+      });
+    const d = $('#f-del'); if (d) d.onclick = async () => {
+      const used = S.products.some((p) => (p.filaments || []).some((u) => u.filamentId === f.id));
+      if (used) return toast('Este filamento está em produtos. Troque nos produtos antes de excluir.');
+      if (await confirmDlg('Excluir filamento?', 'As compras lançadas dele continuam no histórico financeiro.', 'Excluir')) { await delDoc('filaments', f.id); }
+    };
+  }
+  function purchaseDialog(fid, rolls) {
+    openDlg('Registrar compra de filamento',
+      '<div class="field"><label for="c-fil">Filamento</label><select class="in" id="c-fil">' + S.filaments.map((f) => '<option value="' + f.id + '"' + (f.id === fid ? ' selected' : '') + '>' + esc(f.material + ' ' + f.color + (f.brand ? ' · ' + f.brand : '')) + ' — estoque ' + grams(filStats(f.id).stock) + '</option>').join('') + '</select></div>' +
+      '<p class="hint" id="c-after"></p>' +
+      '<div class="fg3"><div class="field"><label for="c-rolls">Rolos</label><input class="in num" id="c-rolls" inputmode="numeric" value="' + (rolls || 1) + '"></div><div class="field"><label for="c-g">Gramas por rolo</label><input class="in num" id="c-g" inputmode="numeric" value="1000"></div><div class="field"><label for="c-price">Valor total pago (R$)</label><input class="in num" id="c-price" inputmode="decimal" placeholder="0,00"></div></div>' +
+      '<div class="field"><label for="c-date">Data</label><input class="in" type="date" id="c-date" value="' + today() + '"></div><p class="hint">Inclua o frete no valor pago para o custo por grama ficar real.</p>',
+      async () => {
+        const g = num($('#c-rolls').value) * num($('#c-g').value), price = num($('#c-price').value);
+        if (g <= 0 || price <= 0) { toast('Informe quantidade e valor'); return false; }
+        const fidSel = $('#c-fil').value, f = byId('filaments', fidSel), before = filStats(fidSel).stock;
+        await saveDoc('purchases', { filamentId: fidSel, grams: g, price, date: $('#c-date').value || today() }); toast('Compra registrada em ' + (f ? f.material + ' ' + f.color : 'filamento') + ': ' + grams(before) + ' → ' + grams(before + g)); return true;
+      });
+    const after = () => { const st = filStats($('#c-fil').value).stock, g = num($('#c-rolls').value) * num($('#c-g').value); $('#c-after').innerHTML = 'Estoque atual <b>' + grams(st) + '</b> → depois da compra <b>' + grams(st + g) + '</b>' + (st < 0 ? '<br><span class="neg">O estoque está negativo: produções foram registradas sem compra suficiente, então parte desta compra só zera o saldo.</span>' : ''); };
+    ['#c-fil', '#c-rolls', '#c-g'].forEach((sel) => $(sel).addEventListener('input', after)); $('#c-fil').addEventListener('change', after); after();
+  }
+  function adjustDialog(fid) {
+    openDlg('Acertar estoque de filamento',
+      '<p class="hint">Pese o rolo (desconte uns 200 g do carretel vazio) e informe quanto filamento existe de verdade. O app corrige o saldo sem mexer no custo por grama.</p>' +
+      '<div class="field"><label for="a-fil">Filamento</label><select class="in" id="a-fil">' + S.filaments.map((f) => '<option value="' + f.id + '"' + (f.id === fid ? ' selected' : '') + '>' + esc(f.material + ' ' + f.color + (f.brand ? ' · ' + f.brand : '')) + ' — no app: ' + grams(filStats(f.id).stock) + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="a-g">Quanto tem agora (g)</label><input class="in num" id="a-g" inputmode="decimal" placeholder="ex.: 650"></div>',
+      async () => {
+        const id = $('#a-fil').value, real = num($('#a-g').value), cur = filStats(id).stock;
+        if ($('#a-g').value.trim() === '' || real < 0) { toast('Informe o peso atual'); return false; }
+        const diff = Math.round((cur - real) * 10) / 10; if (!diff) { toast('O estoque já está certo'); return true; }
+        await saveDoc('productions', { kind: 'ajuste', date: today(), productId: '', qty: 0, machineId: '', minutes: 0, use: [{ filamentId: id, grams: diff }], energyCost: 0, helperCost: 0, note: 'Acerto de estoque: ' + grams(cur) + ' → ' + grams(real), createdAt: Date.now() });
+        toast('Estoque acertado: ' + grams(real)); return true;
+      });
+  }
+  function lossDialog() {
+    openDlg('Lançar perda ou ajuste de estoque',
+      '<p class="hint">Use para impressões que falharam, sobras inutilizáveis ou para acertar o estoque depois de pesar o rolo.</p>' +
+      '<div class="field"><label for="l-fil">Filamento</label><select class="in" id="l-fil">' + S.filaments.map((f) => '<option value="' + f.id + '">' + esc(f.material + ' ' + f.color) + ' — estoque ' + grams(filStats(f.id).stock) + '</option>').join('') + '</select></div>' +
+      '<div class="fg"><div class="field"><label for="l-g">Gramas perdidos</label><input class="in num" id="l-g" inputmode="decimal"></div><div class="field"><label for="l-date">Data</label><input class="in" type="date" id="l-date" value="' + today() + '"></div></div>' +
+      '<div class="field"><label for="l-note">Motivo</label><input class="in" id="l-note" placeholder="Ex.: falha na primeira camada"></div>',
+      async () => {
+        const g = num($('#l-g').value); if (g <= 0) { toast('Informe os gramas'); return false; }
+        await saveDoc('productions', { kind: 'perda', date: $('#l-date').value || today(), productId: '', qty: 0, machineId: '', minutes: 0, use: [{ filamentId: $('#l-fil').value, grams: g }], energyCost: 0, helperCost: 0, note: $('#l-note').value.trim() || 'Perda', createdAt: Date.now() });
+        toast('Perda lançada'); return true;
+      });
+  }
+
+  // ================= Máquinas =================
+  function vMaquinas() {
+    let h = head('Máquinas', 'Cadastro das impressoras e lembretes de manutenção por horas de impressão ou por dias. As horas sobem sozinhas a cada produção registrada.', '<button class="btn primary" data-new="machine">+ Nova máquina</button>');
+    if (!S.machines.length) return h + empty('Nenhuma máquina cadastrada', 'Cadastre sua impressora com o valor pago: ele entra no investimento total.', '<button class="btn primary" data-new="machine">Cadastrar máquina</button>');
+    h += '<div class="grid g2">' + S.machines.map((m) => {
+      const tasks = S.maintenance.filter((t) => t.machineId === m.id).map((t) => Object.assign({ t }, maintStatus(t))).sort((a, b) => ({ bad: 0, warn: 1, good: 2 }[a.level] - { bad: 0, warn: 1, good: 2 }[b.level]));
+      return '<div class="card"><div class="card-head"><div><h2>' + esc(m.name) + '</h2><p class="hint">' + esc(m.model || '') + (m.purchaseDate ? ' · comprada em ' + fmtDate(m.purchaseDate) : '') + '</p></div><button class="btn sm" data-edit-machine="' + m.id + '">Editar</button></div>' +
+        '<div class="kv"><span>Valor pago</span><span>' + brl(m.price) + '</span><span>Horas de impressão</span><span>' + n1(machineHours(m.id), 1) + ' h</span><span>Consumo médio</span><span>' + n1(m.watts || 150) + ' W</span></div>' +
+        '<div class="card-head" style="margin:16px 0 4px"><h2>Manutenção</h2><button class="btn sm" data-new-task="' + m.id + '">+ Lembrete</button></div>' +
+        (tasks.length ? tasks.map((x) => '<div class="mtask"><div><b>' + esc(x.t.task) + '</b><small>' + (num(x.t.everyHours) ? 'a cada ' + n1(x.t.everyHours) + ' h' : '') + (num(x.t.everyHours) && num(x.t.everyDays) ? ' ou ' : '') + (num(x.t.everyDays) ? 'a cada ' + n1(x.t.everyDays) + ' dias' : '') + ' · último: ' + fmtDate(x.t.lastDate) + '</small></div><span class="pill ' + x.level + '">' + x.label + '</span><div class="row" style="gap:4px"><button class="btn sm" data-done="' + x.t.id + '">Feito hoje</button><button class="btn sm ghost" data-edit-task="' + x.t.id + '" aria-label="Editar lembrete">Editar</button></div></div>').join('') : '<p class="hint">Nenhum lembrete. Adicione lubrificação, limpeza do bico, tensão das correias…</p>') + '</div>';
+    }).join('') + '</div>';
+    return h;
+  }
+  function machineDialog(m) {
+    m = m || { name: '', model: '', price: '', purchaseDate: today(), watts: 150, baseHours: 0 };
+    openDlg((m.id ? 'Editar' : 'Nova') + ' máquina',
+      '<div class="fg"><div class="field"><label for="m-name">Nome</label><input class="in" id="m-name" required value="' + esc(m.name) + '" placeholder="Ex.: Kobra X"></div><div class="field"><label for="m-model">Modelo</label><input class="in" id="m-model" value="' + esc(m.model) + '"></div></div>' +
+      '<div class="fg"><div class="field"><label for="m-price">Valor pago (R$)</label><input class="in num" id="m-price" inputmode="decimal" value="' + esc(m.price) + '"></div><div class="field"><label for="m-date">Data da compra</label><input class="in" type="date" id="m-date" value="' + esc(m.purchaseDate) + '"></div></div>' +
+      '<div class="fg"><div class="field"><label for="m-watts">Consumo médio (W)</label><input class="in num" id="m-watts" inputmode="numeric" value="' + esc(m.watts) + '"></div><div class="field"><label for="m-hours">Horas já impressas antes do sistema</label><input class="in num" id="m-hours" inputmode="decimal" value="' + esc(m.baseHours) + '"></div></div>' +
+      '<p class="hint">Consumo médio: confira no manual ou com uma tomada medidora. Ele entra no custo de energia de cada peça.</p>' +
+      (m.id ? '<button type="button" class="btn sm ghost danger" id="m-del" style="align-self:flex-start">Excluir máquina</button>' : ''),
+      async () => {
+        const out = Object.assign({}, m, { name: $('#m-name').value.trim(), model: $('#m-model').value.trim(), price: num($('#m-price').value), purchaseDate: $('#m-date').value, watts: num($('#m-watts').value), baseHours: num($('#m-hours').value) });
+        if (!out.name) { toast('Dê um nome à máquina'); return false; }
+        await saveDoc('machines', out); toast('Máquina salva'); return true;
+      });
+    const d = $('#m-del'); if (d) d.onclick = async () => { if (await confirmDlg('Excluir máquina?', 'O valor dela sai do investimento total. Os lembretes de manutenção também são excluídos.', 'Excluir')) { for (const t of S.maintenance.filter((x) => x.machineId === m.id)) await delDoc('maintenance', t.id); await delDoc('machines', m.id); } };
+  }
+  function taskDialog(t, machineId) {
+    t = t || { machineId, task: '', everyHours: '', everyDays: '', lastDate: today(), lastHours: machineHours(machineId) };
+    openDlg((t.id ? 'Editar' : 'Novo') + ' lembrete',
+      '<div class="field"><label for="t-task">Tarefa</label><input class="in" id="t-task" required value="' + esc(t.task) + '" placeholder="Ex.: Lubrificar eixos"></div>' +
+      '<div class="fg"><div class="field"><label for="t-h">A cada (horas de impressão)</label><input class="in num" id="t-h" inputmode="numeric" value="' + esc(t.everyHours) + '"></div><div class="field"><label for="t-d">Ou a cada (dias)</label><input class="in num" id="t-d" inputmode="numeric" value="' + esc(t.everyDays) + '"></div></div>' +
+      '<div class="field"><label for="t-last">Última vez feita</label><input class="in" type="date" id="t-last" value="' + esc(t.lastDate) + '"></div>' +
+      (t.id ? '<button type="button" class="btn sm ghost danger" id="t-del" style="align-self:flex-start">Excluir lembrete</button>' : ''),
+      async () => {
+        const out = Object.assign({}, t, { task: $('#t-task').value.trim(), everyHours: num($('#t-h').value), everyDays: num($('#t-d').value), lastDate: $('#t-last').value || today() });
+        if (!out.task) { toast('Descreva a tarefa'); return false; }
+        if (!out.everyHours && !out.everyDays) { toast('Informe o intervalo em horas ou dias'); return false; }
+        await saveDoc('maintenance', out); toast('Lembrete salvo'); return true;
+      });
+    const d = $('#t-del'); if (d) d.onclick = async () => { if (await confirmDlg('Excluir lembrete?', '', 'Excluir')) await delDoc('maintenance', t.id); };
+  }
+
+  // ================= Vendas =================
+  function vVendas() {
+    let h = head('Vendas', 'Cada venda calcula a taxa do canal, a comissão do vendedor e o valor que fica com você. Encomendas entregues entram aqui sozinhas.', '<button class="btn primary" data-new="sale"' + (S.products.length ? '' : ' disabled') + '>+ Lançar venda</button>');
+    if (!S.sales.length) return h + empty('Nenhuma venda lançada', S.products.length ? 'Lance vendas do Mercado Livre, Shopee, TikTok Shop, Instagram, site, vendedores ou WhatsApp.' : 'Cadastre produtos para lançar vendas.', S.products.length ? '<button class="btn primary" data-new="sale">Lançar venda</button>' : '<button class="btn" data-go="produtos">Cadastrar produto</button>');
+    const list = S.sales.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const tot = list.reduce((a, s) => ({ g: a.g + num(s.unitPrice) * num(s.qty), f: a.f + num(s.fees) + num(s.shipping), c: a.c + num(s.commission), n: a.n + num(s.net) }), { g: 0, f: 0, c: 0, n: 0 });
+    h += '<div class="kpis">' + kpi('Vendas brutas', brl(tot.g), list.length + ' lançamento(s)') + kpi('Taxas e frete', brl(tot.f), pct(tot.g ? tot.f / tot.g * 100 : 0) + ' do bruto') + kpi('Comissões de vendedores', brl(tot.c), pct(tot.g ? tot.c / tot.g * 100 : 0) + ' do bruto') + kpi('Receita líquida', brl(tot.n), 'o que entra na conta') + '</div>';
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Canal</th><th class="r">Qtd.</th><th class="r">Preço unit.</th><th class="r">Taxas + frete</th><th class="r">Comissão</th><th class="r">Líquido</th><th class="r">Lucro estimado</th><th></th></tr></thead><tbody>' + list.map((s) => {
+      const p = byId('products', s.productId); const c = p ? productCost(p).total * num(s.qty) : 0; const lucro = num(s.net) - c;
+      const ch = esc((CHANNELS.find((x) => x.id === s.channel) || {}).short || s.channel) + (s.sellerId ? '<br><small class="hint">' + esc(sellerName(s.sellerId) || 'vendedor excluído') + '</small>' : '') + (s.orderId ? '<br><small class="hint">encomenda</small>' : '');
+      return '<tr><td class="num">' + fmtDate(s.date) + '</td><td>' + esc(p ? p.name : '—') + (s.client ? '<br><small class="hint">' + esc(s.client) + '</small>' : '') + '</td><td>' + ch + '</td><td class="r num">' + n1(s.qty) + '</td><td class="r num">' + brl(s.unitPrice) + '</td><td class="r num">' + brl(num(s.fees) + num(s.shipping)) + '</td><td class="r num">' + (num(s.commission) ? brl(s.commission) : '—') + '</td><td class="r num">' + brl(s.net) + '</td><td class="r num ' + (lucro >= 0 ? 'pos' : 'neg') + '">' + (p ? brl(lucro) : '—') + '</td><td class="r"><button class="btn sm ghost danger" data-del-sale="' + s.id + '">Excluir</button></td></tr>';
+    }).join('') + '</tbody></table></div><p class="hint">Lucro estimado = líquido − custo atual da peça (filamento, energia, falhas, ajudante e embalagem). O financeiro do painel usa compras e despesas reais.</p>';
+    return h;
+  }
+  const sellerOpts = (sel) => '<option value="">Sem vendedor</option>' + S.sellers.filter((x) => x.active !== false || x.id === sel).map((x) => '<option value="' + x.id + '"' + (x.id === sel ? ' selected' : '') + '>' + esc(x.name) + ' · ' + n1(x.commission, 1) + '%</option>').join('');
+  function saleDialog(pid) { return dealDialog({ type: 'venda', productId: pid }); }
+
+  // ================= Encomendas =================
+  let orderFilter = 'abertas';
+  function orderCalc(o) {
+    const comm = commOf(o.sellerId); let gross = 0, fees = 0, cost = 0;
+    (o.items || []).forEach((it) => { const p = byId('products', it.productId), q = num(it.qty), u = num(it.unitPrice); gross += u * q; fees += feeAt(u, o.channel) * q; if (p) cost += productCost(p).total * q; });
+    const commission = gross * comm / 100, ship = num(o.shipping), net = gross - fees - commission - ship;
+    return { gross, fees, commission, ship, net, cost, profit: net - cost, comm };
+  }
+  function vEncomendas() {
+    let h = head('Encomendas', 'Pedidos sob encomenda do Instagram, do site, de vendedores ou do WhatsApp. Ao marcar como entregue, a venda é lançada sozinha, com taxas e comissão.', '<button class="btn" data-go="vendedores">Vendedores</button><button class="btn" data-new="lead"' + (S.products.length ? '' : ' disabled') + '>+ Lead</button><button class="btn primary" data-new="order"' + (S.products.length ? '' : ' disabled') + '>+ Nova encomenda</button>');
+    if (!S.products.length) return h + empty('Cadastre produtos primeiro', 'Cada item da encomenda usa um produto cadastrado, assim o custo sai certo. Para uma peça personalizada, cadastre como produto com os gramas e o tempo do fatiador.', '<button class="btn primary" data-go="produtos">Cadastrar produto</button>');
+    if (!S.orders.length) return h + empty('Nenhuma encomenda', 'Registre o pedido com cliente, canal, itens e prazo de entrega.', '<button class="btn primary" data-new="order">Registrar encomenda</button>');
+    const isOpen = (o) => o.status !== 'entregue' && o.status !== 'cancelada';
+    const open = S.orders.filter(isOpen);
+    const sum = open.reduce((a, o) => { const c = orderCalc(o); return { g: a.g + c.gross, d: a.d + num(o.deposit), p: a.p + c.profit }; }, { g: 0, d: 0, p: 0 });
+    const week = open.filter((o) => o.dueDate && daysBetween(today(), o.dueDate) <= 7).length;
+    h += '<div class="kpis">' + kpi('Encomendas abertas', n1(open.length), week + ' com entrega nos próximos 7 dias') + kpi('Valor em aberto', brl(sum.g), 'lucro estimado ' + brl(sum.p)) + kpi('Sinais recebidos', brl(sum.d), 'falta receber ' + brl(Math.max(0, sum.g - sum.d))) + '</div>';
+    h += '<div class="chips" style="margin:0">' + [['abertas', 'Abertas'], ['leads', 'Leads e orçamentos'], ['todas', 'Todas']].map(([k, l]) => '<button class="btn sm' + (orderFilter === k ? ' primary' : '') + '" data-ofilter="' + k + '">' + l + '</button>').join('') + '</div>';
+    const A = allocOrders();
+    const list = S.orders.filter((o) => orderFilter === 'todas' || (orderFilter === 'leads' ? o.status === 'orcamento' : isOpen(o) && o.status !== 'orcamento')).sort((a, b) => (isOpen(b) - isOpen(a)) || (isOpen(a) ? (a.dueDate || '9999').localeCompare(b.dueDate || '9999') : (b.date || '').localeCompare(a.date || '')));
+    h += list.length ? '<div class="tbl-wrap"><table><thead><tr><th>Prazo</th><th>Cliente</th><th>Canal</th><th>Itens</th><th class="r">Valor</th><th class="r">Lucro est.</th><th>Status</th><th></th></tr></thead><tbody>' + list.map((o) => {
+      const c = orderCalc(o), d = o.dueDate ? daysBetween(today(), o.dueDate) : null;
+      const due = !o.dueDate ? '—' : fmtDate(o.dueDate) + (isOpen(o) && o.status !== 'orcamento' ? '<br>' + (d < 0 ? '<span class="pill bad">atrasada ' + (-d) + 'd</span>' : d <= 2 ? '<span class="pill warn">' + (d === 0 ? 'hoje' : 'em ' + d + 'd') + '</span>' : '<span class="hint">em ' + d + ' dias</span>') : '');
+      const items = (o.items || []).map((it) => { const p = byId('products', it.productId); return n1(it.qty) + '× ' + esc(p ? p.name : '—'); }).join('<br>');
+      const ch = esc((CHANNELS.find((x) => x.id === o.channel) || {}).short || o.channel) + (o.sellerId ? '<br><small class="hint">' + esc(sellerName(o.sellerId)) + ' · ' + n1(c.comm, 1) + '%</small>' : '');
+      const al = A[o.id], readyPill = al ? (al.ready ? '<br><span class="pill good" style="margin-top:4px">pronta para entregar</span>' : '<br><span class="pill warn" style="margin-top:4px">' + al.readyQty + ' pronta(s) · produzir ' + al.make + '</span>') : '';
+      const status = o.billed ? '<span class="pill good">entregue · venda lançada</span>' : '<select class="in" style="min-height:34px;min-width:130px" data-ost="' + o.id + '" aria-label="Status da encomenda">' + ORDER_ST.map(([k, l]) => '<option value="' + k + '"' + (o.status === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>' + readyPill;
+      return '<tr><td class="num">' + due + '</td><td><b>' + esc(o.client) + '</b>' + ([o.phone, o.instagram, o.contact].filter(Boolean).length ? '<br><small class="hint">' + esc([o.phone, o.instagram].filter(Boolean).join(' · ') || o.contact) + '</small>' : '') + '</td><td>' + ch + '</td><td>' + items + '</td><td class="r num">' + brl(c.gross) + (num(o.deposit) ? '<br><small class="hint">sinal ' + brl(o.deposit) + '</small>' : '') + '</td><td class="r num ' + (c.profit >= 0 ? 'pos' : 'neg') + '">' + brl(c.profit) + '</td><td>' + status + '</td><td class="r" style="white-space:nowrap">' + (o.billed ? '' : '<button class="btn sm" data-order-plan="' + o.id + '">Produzir</button> <button class="btn sm ghost" data-edit-order="' + o.id + '">Editar</button>') + '<button class="btn sm ghost" data-msg-order="' + o.id + '">Mensagem</button>' + (myRole() === 'producao' ? '' : '<button class="btn sm ghost danger" data-del-order="' + o.id + '">Excluir</button>') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' : '<p class="hint">Nenhuma encomenda aberta.</p>';
+    h += '<p class="hint">"Produzir" leva os itens para o planejamento de produção e mostra se o filamento dá conta. O sinal é só controle: a venda inteira é lançada na entrega.</p>';
+    return h;
+  }
+  function orderDialog(o, type) { return dealDialog({ type: type || (o && o.status === 'orcamento' ? 'lead' : 'encomenda'), order: o }); }
+  const ORIGINS = ['Instagram', 'WhatsApp', 'Indicação', 'Site', 'Vendedor', 'Mercado Livre / Shopee / TikTok', 'Feira ou loja física', 'Outro'];
+  const PAYMENTS = ['Pix', 'Cartão de crédito', 'Cartão de débito', 'Dinheiro', 'Boleto', 'Pago no marketplace', 'A combinar'];
+  const DELIVERY = ['Retirada', 'Entrega própria', 'Correios / transportadora', 'Envio do marketplace', 'A combinar'];
+  // Formulário único: venda de pronta entrega, encomenda ou lead/orçamento.
+  function dealDialog(opt) {
+    const st = set();
+    const src = opt.order ? JSON.parse(JSON.stringify(opt.order)) : null;
+    const d = src || { client: '', phone: '', instagram: '', city: '', origin: 'Instagram', channel: 'instagram', sellerId: '', margin: '', payment: 'Pix', delivery: 'Retirada', date: today(), dueDate: '', deposit: '', shipping: '', notes: '', status: 'confirmada', items: [] };
+    if (src && !d.phone && d.contact) d.phone = d.contact;
+    if (!d.items.length) d.items.push({ productId: opt.productId || '', qty: 1, unitPrice: '', auto: true, colors: {} });
+    d.items.forEach((it) => { if (it.auto === undefined) it.auto = !src; if (!it.colors) it.colors = {}; });
+    let type = opt.type || 'encomenda';
+    if (opt.type === 'venda' && !src) d.channel = 'direto';
+    const mm = myMember(); if (!src && myRole() === 'vendas' && mm && mm.sellerId) { d.sellerId = mm.sellerId; d.channel = 'vendedor'; d.origin = 'Vendedor'; }
+    const opts = (arr, sel) => arr.map((x) => '<option' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>').join('');
+    const marginOf = (p) => String(d.margin).trim() !== '' ? num(d.margin) : (p.margin !== undefined && p.margin !== '' ? num(p.margin) : num(st.margin));
+    const prodOpts = (sel) => '<option value="">Escolha o produto</option>' + S.products.map((p) => '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('');
+    const drawItems = () => d.items.map((it, i) => { const p = byId('products', it.productId); return '<div class="deal-item"><div class="deal-top"><span class="thumb">' + (p ? photo(p) : 'foto') + '</span><select class="in" data-di="' + i + '" data-dk="productId" aria-label="Produto">' + prodOpts(it.productId) + '</select><input class="in num q" data-di="' + i + '" data-dk="qty" value="' + esc(it.qty) + '" inputmode="numeric" aria-label="Quantidade"><input class="in num pr" data-di="' + i + '" data-dk="unitPrice" value="' + esc(it.unitPrice === '' ? '' : n1(it.unitPrice, 2)) + '" inputmode="decimal" placeholder="preço un." aria-label="Preço unitário"><button type="button" class="x" data-drm="' + i + '" aria-label="Remover item">✕</button></div><div id="d-info-' + i + '"></div></div>'; }).join('');
+    const title = () => ({ venda: 'Lançar venda', encomenda: d.id ? 'Editar encomenda' : 'Nova encomenda', lead: d.id ? 'Editar lead / orçamento' : 'Novo lead / orçamento' })[type];
+    openDlg(title(),
+      '<div class="seg" role="group" aria-label="Tipo de registro">' + (src ? '' : '<button type="button" data-dtype="venda">Venda (pronta entrega)</button>') + '<button type="button" data-dtype="encomenda">Encomenda</button><button type="button" data-dtype="lead">Lead / orçamento</button></div>' +
+      '<p class="hint" id="d-type-hint"></p>' +
+      '<div class="sec-t">Cliente</div>' +
+      '<div class="fg"><div class="field"><label for="d-client">Nome</label><input class="in" id="d-client" value="' + esc(d.client) + '"></div><div class="field"><label for="d-phone">WhatsApp</label><input class="in" id="d-phone" inputmode="tel" value="' + esc(d.phone) + '" placeholder="(12) 9 0000-0000"></div></div>' +
+      '<div class="fg3"><div class="field"><label for="d-ig">Instagram</label><input class="in" id="d-ig" value="' + esc(d.instagram) + '" placeholder="@cliente"></div><div class="field"><label for="d-city">Cidade / bairro</label><input class="in" id="d-city" value="' + esc(d.city) + '"></div><div class="field"><label for="d-origin">Como chegou</label><select class="in" id="d-origin">' + opts(ORIGINS, d.origin) + '</select></div></div>' +
+      '<div class="sec-t">Venda</div>' +
+      '<div class="fg3"><div class="field"><label for="d-ch">Canal</label><select class="in" id="d-ch">' + CHANNELS.map((c) => '<option value="' + c.id + '"' + (c.id === d.channel ? ' selected' : '') + '>' + c.name + '</option>').join('') + '</select></div><div class="field"><label for="d-seller">Vendedor</label><select class="in" id="d-seller">' + sellerOpts(d.sellerId) + '</select></div><div class="field"><label for="d-margin">Margem de lucro (%)</label><input class="in num" id="d-margin" inputmode="decimal" value="' + esc(d.margin) + '" placeholder="padrão de cada produto"></div></div>' +
+      '<div class="fg3"><div class="field"><label for="d-pay">Pagamento</label><select class="in" id="d-pay">' + opts(PAYMENTS, d.payment) + '</select></div><div class="field"><label for="d-deliv">Entrega</label><select class="in" id="d-deliv">' + opts(DELIVERY, d.delivery) + '</select></div><div class="field" id="d-status-f"><label for="d-status">Status</label><select class="in" id="d-status">' + ORDER_ST.filter((x) => x[0] !== 'entregue' && x[0] !== 'orcamento').map(([k, l]) => '<option value="' + k + '"' + (d.status === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div></div>' +
+      '<div class="sec-t">Itens</div><p class="hint">Preço em branco = preço sugerido para o canal com a margem acima, já contando taxa e comissão. As peças prontas são usadas primeiro; o restante entra em produção.</p>' +
+      '<div id="d-items" style="display:flex;flex-direction:column;gap:8px">' + drawItems() + '</div><button type="button" class="btn sm" id="d-add" style="align-self:flex-start">+ Item</button>' +
+      '<div class="sec-t">Prazo e valores</div>' +
+      '<div class="fg3"><div class="field"><label for="d-date">Data</label><input class="in" type="date" id="d-date" value="' + esc(d.date) + '"></div><div class="field" id="d-due-f"><label for="d-due">Prazo de entrega</label><input class="in" type="date" id="d-due" value="' + esc(d.dueDate) + '"></div><div class="field" id="d-dep-f"><label for="d-dep">Sinal recebido (R$)</label><input class="in num" id="d-dep" inputmode="decimal" value="' + esc(d.deposit) + '" placeholder="0,00"></div></div>' +
+      '<div class="fg"><div class="field"><label for="d-ship">Frete pago por você (R$)</label><input class="in num" id="d-ship" inputmode="decimal" value="' + esc(d.shipping) + '" placeholder="0,00"></div><div class="field"><label for="d-notes">Observações</label><input class="in" id="d-notes" value="' + esc(d.notes) + '" placeholder="Ex.: nome LUNA em branco, entregar no sábado"></div></div>' +
+      '<div class="sec-t">Produção</div><div id="d-prod"></div>' +
+      '<div class="alert" id="d-sum" style="flex-direction:column;align-items:stretch"></div>',
+      async () => {
+        read();
+        const items = d.items.filter((it) => it.productId && num(it.qty) > 0).map((it) => ({ productId: it.productId, qty: Math.floor(num(it.qty)), unitPrice: num(it.unitPrice), colors: cleanColors(it) }));
+        if (!items.length) { toast('Inclua ao menos um item'); return false; }
+        if (items.some((it) => it.unitPrice <= 0)) { toast('Informe o preço de todos os itens'); return false; }
+        if (d.channel === 'vendedor' && !d.sellerId) { toast('Escolha o vendedor'); return false; }
+        if (type !== 'venda' && !d.client) { toast('Informe o nome do cliente'); return false; }
+        const info = { client: d.client, phone: d.phone, instagram: d.instagram, city: d.city, origin: d.origin, payment: d.payment, delivery: d.delivery, notes: d.notes };
+        if (type === 'venda') {
+          const plan = dealPlan(items, null), short = plan.lines.reduce((a, l) => a + (l ? l.make : 0), 0);
+          if (short > 0 && !(await confirmDlg('Faltam ' + short + ' peça(s) prontas', 'O estoque de peças prontas não cobre esta venda. Lance como encomenda para produzir, ou confirme se as peças já existem e só não foram registradas na produção.', 'Lançar venda mesmo assim'))) return false;
+          const comm = commOf(d.sellerId); let shipLeft = num(d.shipping);
+          for (const it of items) {
+            const fee = Math.round(feeAt(it.unitPrice, d.channel) * it.qty * 100) / 100, commission = Math.round(it.unitPrice * it.qty * comm) / 100, ship = shipLeft; shipLeft = 0;
+            await saveDoc('sales', Object.assign({ productId: it.productId, channel: d.channel, sellerId: d.sellerId, qty: it.qty, unitPrice: it.unitPrice, fees: fee, commission, shipping: ship, net: Math.round((it.unitPrice * it.qty - fee - commission - ship) * 100) / 100, date: d.date || today(), colors: it.colors }, info));
+          }
+          toast('Venda lançada'); return true;
+        }
+        const out = Object.assign({}, src || {}, info, { channel: d.channel, sellerId: d.sellerId, margin: String(d.margin).trim() === '' ? '' : num(d.margin), date: d.date || today(), dueDate: d.dueDate, deposit: num(d.deposit), shipping: num(d.shipping), items, status: type === 'lead' ? 'orcamento' : (d.status === 'orcamento' ? 'confirmada' : d.status), contact: d.phone || d.instagram });
+        delete out.auto;
+        const saved = await saveDoc('orders', out); toast(type === 'lead' ? 'Lead salvo' : 'Encomenda salva');
+        if (type === 'encomenda' && (!src || src.status === 'orcamento')) {
+          const mk = dealPlan(items, saved.id).lines.reduce((a, l) => a + (l ? l.make : 0), 0), tot = items.reduce((a, it) => a + it.qty, 0);
+          if (mk > 0) postAuto('producao', 'Nova encomenda de ' + d.client + ': produzir ' + mk + ' de ' + tot + ' peça(s)' + (d.dueDate ? ' até ' + fmtDate(d.dueDate) : '') + '.', saved.id);
+          else postAuto('vendas', 'Encomenda de ' + d.client + ' registrada com todas as ' + tot + ' peça(s) já prontas.', saved.id);
+        }
+        return true;
+      });
+    $('#dlg').classList.add('wide');
+    dealCtx = (i) => { read(); const it = d.items[i] || {}; return { price: it.unitPrice, qty: it.qty, phone: d.phone }; };
+    function cleanColors(it) { const o = {}; Object.keys(it.colors || {}).forEach((k) => { if (it.colors[k] && it.colors[k] !== k) o[k] = it.colors[k]; }); return o; }
+    function read() {
+      d.client = $('#d-client').value.trim(); d.phone = $('#d-phone').value.trim(); d.instagram = $('#d-ig').value.trim(); d.city = $('#d-city').value.trim(); d.origin = $('#d-origin').value;
+      d.channel = $('#d-ch').value; d.sellerId = $('#d-seller').value; d.margin = $('#d-margin').value; d.payment = $('#d-pay').value; d.delivery = $('#d-deliv').value; d.status = $('#d-status').value;
+      d.date = $('#d-date').value; d.dueDate = $('#d-due').value; d.deposit = $('#d-dep').value; d.shipping = $('#d-ship').value; d.notes = $('#d-notes').value.trim();
+    }
+    function autoPrices() {
+      const comm = commOf(d.sellerId);
+      d.items.forEach((it, i) => {
+        const p = byId('products', it.productId); if (!p || !it.auto) return;
+        const r = suggest(productCost(p, it.colors).total, marginOf(p), d.channel, comm); it.unitPrice = r ? r.price : '';
+        const el = $('#d-items [data-di="' + i + '"][data-dk="unitPrice"]'); if (el && document.activeElement !== el) el.value = r ? n1(r.price, 2) : '';
+      });
+    }
+    function setType(t) {
+      type = t;
+      $$('[data-dtype]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.dtype === t)));
+      $('#d-due-f').hidden = t === 'venda'; $('#d-dep-f').hidden = t === 'venda'; $('#d-status-f').hidden = t !== 'encomenda';
+      $('#d-type-hint').textContent = { venda: 'Peça já pronta: a venda entra em Vendas agora e baixa do estoque de peças prontas.', encomenda: 'Pedido para produzir e entregar depois. Quando marcar como entregue, a venda é lançada sozinha.', lead: 'Contato interessado ou orçamento enviado. Fica em Encomendas › Leads até virar pedido.' }[t];
+      $('#dlg h2').textContent = title();
+      $('#dlg-ok').textContent = { venda: 'Lançar venda', encomenda: 'Salvar encomenda', lead: 'Salvar lead' }[t];
+    }
+    function infos() {
+      const plan = dealPlan(d.items, d.id);
+      d.items.forEach((it, i) => {
+        const el = $('#d-info-' + i); if (!el) return;
+        const p = byId('products', it.productId), l = plan.lines[i];
+        if (!p || !l) { el.innerHTML = ''; return; }
+        let h = '<div class="deal-info"><span class="pill ' + (l.ready ? 'good' : 'neutral') + '">pronto: ' + l.ready + '</span>' + (l.make ? '<span class="pill warn">produzir: ' + l.make + '</span><span>≈ ' + n1(num(p.printMinutes) * l.make / 60, 1) + ' h de impressão</span>' : '<span>sai do estoque de peças prontas</span>') + '</div>';
+        const unit = num(it.unitPrice);
+        h += '<div class="deal-price"><span><b>' + brl(unit) + '</b> por unidade</span><span>× ' + l.q + '</span><span>= <b>' + brl(unit * l.q) + '</b> para o cliente</span></div>';
+        const co = colorOptions(d.items, i, d.id);
+        if (co.length) h += '<div class="tbl-wrap color-avail"><table><thead><tr><th>Cor' + ((p.filaments || []).length > 1 ? 'es' : '') + ' disponíveis</th><th class="r">Prontas</th><th class="r">Dá p/ produzir</th><th class="r">Total</th><th></th></tr></thead><tbody>' + co.map((o) => '<tr' + (o.current ? ' class="cur"' : '') + '><td>' + varName(p, o.key) + '</td><td class="r num">' + o.ready + '</td><td class="r num">' + o.make + '</td><td class="r num"><b' + (o.current && o.total < l.q ? ' class="neg"' : '') + '>' + o.total + '</b></td><td class="r">' + (o.current ? '<span class="pill neutral">escolhida</span>' : '<button type="button" class="btn sm" data-di="' + i + '" data-dvar="' + esc(JSON.stringify(o.colors)) + '">Usar</button>') + '</td></tr>').join('') + '</tbody></table></div><p class="hint" style="margin:0">Prontas desta cor (sem as reservadas em outras encomendas) + o que o filamento em estoque ainda permite produzir, já descontando os outros itens deste pedido.</p>';
+        h += (p.filaments || []).map((u, k) => {
+          const cur = it.colors[u.filamentId] || u.filamentId, r = plan.status[cur], part = num(u.grams) * l.make * plan.fail;
+          const ok = !l.make || !r || r.missing <= 0, alts = ok ? [] : altsFor(cur, part);
+          return '<div class="color-row"><span><b>' + esc(u.part || ('Cor ' + (k + 1))) + '</b> · ' + n1(u.grams, num(u.grams) % 1 ? 1 : 0) + ' g por peça</span><select class="in" data-di="' + i + '" data-dcol="' + u.filamentId + '" aria-label="Filamento de ' + esc(u.part || 'cor ' + (k + 1)) + '">' + S.filaments.map((f) => '<option value="' + f.id + '"' + (f.id === cur ? ' selected' : '') + '>' + esc(f.material + ' ' + f.color) + ' — ' + grams(Math.max(0, filStats(f.id).stock)) + (f.id === u.filamentId ? ' (original)' : '') + '</option>').join('') + '</select><span>' + (l.make ? (ok ? '<span class="pill good">ok</span>' : '<span class="pill bad">falta ' + grams(r.missing) + '</span>') : '') + '</span></div>' +
+            (alts.length ? '<div class="deal-info">Cores com estoque para trocar: ' + alts.map((a) => '<button type="button" class="btn sm" data-di="' + i + '" data-dswap="' + u.filamentId + '" data-to="' + a.g.id + '">' + swatch(a.g) + ' ' + esc(a.g.material + ' ' + a.g.color) + ' · ' + grams(a.stock) + '</button>').join('') + '</div>' : (!ok ? '<div class="deal-info">Nenhuma outra cor tem estoque suficiente: compre ' + grams(r.missing) + ' ou reduza a quantidade.</div>' : ''));
+        }).join('');
+        el.innerHTML = h;
+      });
+      const ready = plan.lines.reduce((a, l) => a + (l ? l.ready : 0), 0), make = plan.lines.reduce((a, l) => a + (l ? l.make : 0), 0), miss = plan.fil.filter((r) => r.missing > 0);
+      $('#d-prod').innerHTML = !plan.lines.some(Boolean) ? '<p class="hint">Escolha os produtos.</p>' : '<div class="deal-info" style="font-size:13px"><span class="pill good">' + ready + ' pronta(s)</span><span class="pill ' + (make ? 'warn' : 'good') + '">' + make + ' a produzir</span>' + (make ? (miss.length ? '<span class="pill bad">falta filamento</span>' : '<span class="pill good">filamento em estoque dá conta</span>') : '') + '</div>' +
+        (plan.fil.length ? '<div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>Filamento</th><th class="r">Necessário</th><th class="r">Em estoque</th><th class="r">Falta</th></tr></thead><tbody>' + plan.fil.map((r) => { const f = byId('filaments', r.fid); return '<tr><td>' + swatch(f) + ' ' + filName(f) + '</td><td class="r num">' + grams(r.need) + '</td><td class="r num">' + grams(Math.max(0, r.stock)) + '</td><td class="r num">' + (r.missing > 0 ? '<b class="neg">' + grams(r.missing) + '</b>' : '—') + '</td></tr>'; }).join('') + '</tbody></table></div>' : '');
+    }
+    function summary() {
+      const o = { channel: d.channel, sellerId: d.sellerId, shipping: d.shipping, items: d.items };
+      const comm = commOf(d.sellerId); let gross = 0, fees = 0, cost = 0;
+      d.items.forEach((it) => { const p = byId('products', it.productId), q = num(it.qty), u = num(it.unitPrice); gross += u * q; fees += feeAt(u, d.channel) * q; if (p) cost += productCost(p, it.colors).total * q; });
+      const commission = gross * comm / 100, ship = num(d.shipping), net = gross - fees - commission - ship, profit = net - cost;
+      const units = d.items.reduce((a, it) => a + (it.productId ? Math.floor(num(it.qty)) : 0), 0);
+      $('#d-sum').innerHTML = '<div class="client-total"><span>Total para o cliente</span><b>' + brl(gross) + '</b><small>' + units + ' unidade(s)' + (units ? ' · média ' + brl(gross / units) + ' por unidade' : '') + (type !== 'venda' && num(d.deposit) ? ' · sinal ' + brl(d.deposit) + ' · falta ' + brl(Math.max(0, gross - num(d.deposit))) : '') + '</small></div><div class="kv"><span>Valor total</span><span>' + brl(gross) + '</span><span>Taxa do canal / pagamento</span><span>− ' + brl(fees) + '</span><span>Comissão do vendedor (' + n1(comm, 1) + '%)</span><span>− ' + brl(commission) + '</span><span>Frete pago por você</span><span>− ' + brl(ship) + '</span><span>Custo de produção</span><span>− ' + brl(cost) + '</span><span class="total">Lucro</span><span class="total ' + (profit >= 0 ? 'pos' : 'neg') + '">' + brl(profit) + (gross ? ' · ' + pct(profit / gross * 100) : '') + '</span></div>';
+    }
+    const refresh = () => { read(); autoPrices(); infos(); summary(); };
+    const redraw = () => { $('#d-items').innerHTML = drawItems(); refresh(); };
+    $('.seg').addEventListener('click', (e) => { const b = e.target.closest('[data-dtype]'); if (!b) return; setType(b.dataset.dtype); refresh(); });
+    const box = $('#d-items');
+    box.addEventListener('input', (e) => { const t = e.target, i = +t.dataset.di; if (t.dataset.dk === 'qty') { d.items[i].qty = t.value; refresh(); } if (t.dataset.dk === 'unitPrice') { d.items[i].auto = t.value.trim() === ''; d.items[i].unitPrice = num(t.value); refresh(); } });
+    box.addEventListener('change', (e) => {
+      const t = e.target, i = +t.dataset.di;
+      if (t.dataset.dk === 'productId') { d.items[i].productId = t.value; d.items[i].colors = {}; d.items[i].auto = true; redraw(); return; }
+      if (t.dataset.dcol) { d.items[i].colors[t.dataset.dcol] = t.value; refresh(); }
+    });
+    box.addEventListener('click', (e) => {
+      const dv = e.target.closest('[data-dvar]'); if (dv) { d.items[+dv.dataset.di].colors = JSON.parse(dv.dataset.dvar); refresh(); return; }
+      const sw = e.target.closest('[data-dswap]'); if (sw) { d.items[+sw.dataset.di].colors[sw.dataset.dswap] = sw.dataset.to; refresh(); toast('Cor trocada nesta encomenda'); return; }
+      const rm = e.target.closest('[data-drm]'); if (rm) { d.items.splice(+rm.dataset.drm, 1); if (!d.items.length) d.items.push({ productId: '', qty: 1, unitPrice: '', auto: true, colors: {} }); redraw(); }
+    });
+    $('#d-add').onclick = () => { d.items.push({ productId: '', qty: 1, unitPrice: '', auto: true, colors: {} }); redraw(); };
+    $('#d-margin').oninput = () => { d.items.forEach((it) => (it.auto = true)); refresh(); };
+    ['#d-ch', '#d-seller'].forEach((sel) => ($(sel).onchange = refresh));
+    ['#d-ship', '#d-dep'].forEach((sel) => ($(sel).oninput = refresh));
+    setType(type); refresh();
+  }
+  async function deliverOrder(o) {
+    if (o.billed) return;
+    const comm = commOf(o.sellerId); let shipLeft = num(o.shipping);
+    for (const it of o.items || []) {
+      const q = num(it.qty), u = num(it.unitPrice); if (!it.productId || q <= 0) continue;
+      const fee = Math.round(feeAt(u, o.channel) * q * 100) / 100, commission = Math.round(u * q * comm) / 100, ship = shipLeft; shipLeft = 0;
+      await saveDoc('sales', { productId: it.productId, channel: o.channel, sellerId: o.sellerId || '', qty: q, unitPrice: u, fees: fee, commission, shipping: ship, net: Math.round((u * q - fee - commission - ship) * 100) / 100, date: today(), orderId: o.id, colors: it.colors || {}, client: o.client || '', phone: o.phone || o.contact || '', payment: o.payment || '' });
+    }
+    await saveDoc('orders', Object.assign({}, o, { status: 'entregue', billed: true, deliveredAt: today() }));
+    postAuto('todos', 'Encomenda de ' + o.client + ' entregue e venda lançada.', o.id);
+    toast('Encomenda entregue e venda lançada');
+  }
+
+  // ================= Vendedores =================
+  function vVendedores() {
+    let h = head('Vendedores', 'Quem vende por você e a comissão de cada um. A comissão sai do valor da venda e já entra no preço sugerido e no lucro de cada pedido.', '<button class="btn primary" data-new="seller">+ Novo vendedor</button>');
+    if (!S.sellers.length) return h + empty('Nenhum vendedor cadastrado', 'Cadastre quem vende suas peças e a porcentagem de comissão combinada.', '<button class="btn primary" data-new="seller">Cadastrar vendedor</button>');
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Vendedor</th><th class="r">Comissão</th><th class="r">Peças vendidas</th><th class="r">Vendido</th><th class="r">Comissão total</th><th class="r">A pagar</th><th></th></tr></thead><tbody>' + S.sellers.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map((x) => {
+      const ss = S.sales.filter((s) => s.sellerId === x.id);
+      const qty = ss.reduce((a, s) => a + num(s.qty), 0), gross = ss.reduce((a, s) => a + num(s.unitPrice) * num(s.qty), 0), comm = ss.reduce((a, s) => a + num(s.commission), 0), due = ss.filter((s) => !s.commissionPaid).reduce((a, s) => a + num(s.commission), 0);
+      return '<tr><td><b>' + esc(x.name) + '</b>' + (x.active === false ? ' <span class="pill neutral">inativo</span>' : '') + (x.contact ? '<br><small class="hint">' + esc(x.contact) + '</small>' : '') + '</td><td class="r num">' + n1(x.commission, 1) + '%</td><td class="r num">' + n1(qty) + '</td><td class="r num">' + brl(gross) + '</td><td class="r num">' + brl(comm) + '</td><td class="r num">' + (due > 0 ? '<b>' + brl(due) + '</b>' : '—') + '</td><td class="r" style="white-space:nowrap"><button class="btn sm" data-pay-seller="' + x.id + '"' + (due > 0 ? '' : ' disabled') + '>Registrar pagamento</button> <button class="btn sm ghost" data-edit-seller="' + x.id + '">Editar</button></td></tr>';
+    }).join('') + '</tbody></table></div><p class="hint">"Registrar pagamento" marca as comissões em aberto como pagas. Elas já foram descontadas do líquido de cada venda, então não lance de novo em Despesas.</p>';
+    return h;
+  }
+  function sellerDialog(x) {
+    x = x || { name: '', contact: '', commission: set().vendedor.commission, active: true };
+    openDlg((x.id ? 'Editar' : 'Novo') + ' vendedor',
+      '<div class="fg"><div class="field"><label for="v-name">Nome</label><input class="in" id="v-name" value="' + esc(x.name) + '" required></div><div class="field"><label for="v-contact">Contato</label><input class="in" id="v-contact" value="' + esc(x.contact) + '"></div></div>' +
+      '<div class="field"><label for="v-comm">Comissão sobre o valor vendido (%)</label><input class="in num" id="v-comm" inputmode="decimal" value="' + esc(x.commission) + '"></div>' +
+      '<label class="row"><input type="checkbox" id="v-active"' + (x.active !== false ? ' checked' : '') + '> Ativo (aparece na hora de lançar vendas e encomendas)</label>' +
+      (x.id ? '<button type="button" class="btn sm ghost danger" id="v-del" style="align-self:flex-start">Excluir vendedor</button>' : ''),
+      async () => {
+        const out = Object.assign({}, x, { name: $('#v-name').value.trim(), contact: $('#v-contact').value.trim(), commission: Math.min(90, Math.max(0, num($('#v-comm').value))), active: $('#v-active').checked });
+        if (!out.name) { toast('Informe o nome'); return false; }
+        await saveDoc('sellers', out); toast('Vendedor salvo'); return true;
+      });
+    const d = $('#v-del'); if (d) d.onclick = async () => { if (await confirmDlg('Excluir vendedor?', 'As vendas dele continuam no histórico, com a comissão já descontada. Para só parar de usar, desmarque "Ativo".', 'Excluir')) { await delDoc('sellers', x.id); $('#dlg').close(); } };
+  }
+
+  // ================= Despesas =================
+  function vDespesas() {
+    let h = head('Despesas', 'Gastos do dia a dia (operacional) e compras que são investimento, como ferramentas caras ou uma segunda impressora. Compras de filamento ficam em Filamentos.', '<button class="btn primary" data-new="expense">+ Lançar despesa</button>');
+    if (!S.expenses.length) return h + empty('Nenhuma despesa lançada', 'Lance embalagens, anúncios, DAS do MEI, peças e outros gastos.', '<button class="btn primary" data-new="expense">Lançar despesa</button>');
+    const list = S.expenses.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th class="r">Valor</th><th></th></tr></thead><tbody>' + list.map((e) => '<tr><td class="num">' + fmtDate(e.date) + '</td><td>' + esc(e.description || '—') + '</td><td>' + esc(e.category) + '</td><td>' + (e.kind === 'investimento' ? '<span class="pill neutral">investimento</span>' : 'operacional') + '</td><td class="r num">' + brl(e.amount) + '</td><td class="r"><button class="btn sm ghost danger" data-del-exp="' + e.id + '">Excluir</button></td></tr>').join('') + '</tbody></table></div>';
+    return h;
+  }
+  function expenseDialog() {
+    openDlg('Lançar despesa',
+      '<div class="field"><label for="e-desc">Descrição</label><input class="in" id="e-desc" placeholder="Ex.: 100 caixas pequenas"></div>' +
+      '<div class="fg"><div class="field"><label for="e-cat">Categoria</label><select class="in" id="e-cat">' + EXP_CATS.map((c) => '<option>' + c + '</option>').join('') + '</select></div><div class="field"><label for="e-kind">Tipo</label><select class="in" id="e-kind"><option value="operacional">Operacional (custo do mês)</option><option value="investimento">Investimento (entra no ROI)</option></select></div></div>' +
+      '<div class="fg"><div class="field"><label for="e-amt">Valor (R$)</label><input class="in num" id="e-amt" inputmode="decimal"></div><div class="field"><label for="e-date">Data</label><input class="in" type="date" id="e-date" value="' + today() + '"></div></div>' +
+      '<p class="hint">A energia das impressões já é estimada em cada produção. Não lance a conta de luz inteira aqui.</p>',
+      async () => {
+        const amt = num($('#e-amt').value); if (amt <= 0) { toast('Informe o valor'); return false; }
+        await saveDoc('expenses', { description: $('#e-desc').value.trim(), category: $('#e-cat').value, kind: $('#e-kind').value, amount: amt, date: $('#e-date').value || today() }); toast('Despesa lançada'); return true;
+      });
+  }
+
+  // ================= Ajustes =================
+  function vAjustes() {
+    const st = set();
+    const f = (id, label, v, hint) => '<div class="field"><label for="' + id + '">' + label + '</label><input class="in num" id="' + id + '" inputmode="decimal" value="' + esc(n1(v, 2)) + '">' + (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
+    let h = head('Ajustes', 'Valores usados no custo de cada peça e nas taxas dos canais. Confira as taxas na central do vendedor de cada marketplace de tempos em tempos.', '<button class="btn" id="bk-export">Exportar backup</button><button class="btn" id="bk-import">Importar backup</button><input type="file" id="bk-file" accept="application/json,.json" hidden>');
+    h += '<form id="cfg" class="grid" style="gap:14px"><div class="card"><h2>Custos de produção</h2><div class="fg3" style="margin-top:12px">' +
+      f('a-kwh', 'Energia (R$ por kWh)', st.kwh, 'Na conta de luz, com impostos.') + f('a-help', 'Ajudante (R$ por hora)', st.helperHour) + f('a-fail', 'Margem para falhas (%)', st.failPct, 'Somada ao filamento e à energia.') +
+      f('a-pack', 'Embalagem padrão (R$)', st.packaging) + f('a-margin', 'Margem de lucro padrão (%)', st.margin, 'Sobre o preço de venda.') + f('a-cpg', 'Custo por grama sem compra lançada (R$)', st.defaultCpg) + '</div></div>' +
+      '<div class="card"><h2>Mercado Livre (Clássico)</h2><div class="fg3" style="margin-top:12px">' + f('ml-pct', 'Comissão (%)', st.ml.pct, 'Varia de 10% a 14% por categoria.') + f('ml-fix', 'Taxa fixa abaixo do limite (R$)', st.ml.fixedUnder) + f('ml-thr', 'Limite do frete grátis (R$)', st.ml.threshold) + f('ml-ship', 'Frete grátis pago por você, estimado (R$)', st.ml.freeShip, 'Confira no simulador do ML.') + '</div></div>' +
+      '<div class="card"><h2>Shopee</h2><div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>Até (R$)</th><th>Comissão (%)</th><th>Fixo (R$)</th></tr></thead><tbody>' + st.shopee.tiers.map((t, i) => '<tr><td class="num">' + (t.upTo >= 1e8 ? 'acima' : '<input class="in num" data-tier="' + i + '" data-tk="upTo" value="' + n1(t.upTo, 2) + '" aria-label="Faixa até">') + '</td><td><input class="in num" data-tier="' + i + '" data-tk="pct" value="' + n1(t.pct, 2) + '" aria-label="Comissão"></td><td><input class="in num" data-tier="' + i + '" data-tk="fixed" value="' + n1(t.fixed, 2) + '" aria-label="Fixo"></td></tr>').join('') + '</tbody></table></div><p class="hint">Valores de out/2026 para CNPJ e CPF até 450 pedidos em 90 dias.</p></div>' +
+      '<div class="card"><h2>TikTok Shop</h2><div class="fg3" style="margin-top:12px">' + f('tt-under', 'Limite da faixa (R$)', st.tiktok.under) + f('tt-pu', 'Comissão abaixo (%)', st.tiktok.pctUnder) + f('tt-fu', 'Fixo abaixo (R$)', st.tiktok.fixedUnder) + f('tt-po', 'Comissão acima (%)', st.tiktok.pctOver) + f('tt-fo', 'Fixo acima (R$)', st.tiktok.fixedOver) + f('tt-sp', 'Programa de frete (%)', st.tiktok.shipPct) + '</div><label class="row" style="margin-top:10px"><input type="checkbox" id="tt-ship"' + (st.tiktok.shipProgram ? ' checked' : '') + '> Participo do programa de taxas de envio (limite de ' + brl(st.tiktok.shipCap) + ' por produto)</label></div>' +
+      '<div class="card"><h2>Instagram, site e vendedores</h2><div class="fg3" style="margin-top:12px">' + f('ig-pay', 'Instagram: taxa de pagamento (%)', st.instagram.payPct, 'Pix 0%; link ou maquininha de cartão costuma cobrar de 3% a 5%.') + f('ig-fix', 'Instagram: valor fixo por item (R$)', st.instagram.fixed) + f('st-pay', 'Site: taxa do meio de pagamento (%)', st.site.payPct, 'Ex.: gateway de cartão e Pix do site.') + f('st-fix', 'Site: valor fixo por item (R$)', st.site.fixed) + f('vd-pay', 'Vendedor: taxa de pagamento (%)', st.vendedor.payPct) + f('vd-comm', 'Comissão padrão de vendedor (%)', st.vendedor.commission, 'Usada no preço sugerido. Cada vendedor pode ter a sua.') + '</div></div>' +
+      '<div class="row"><button class="btn primary" type="submit">Salvar ajustes</button><button class="btn" type="button" id="cfg-reset">Voltar aos valores padrão</button></div></form>';
+    return h;
+  }
+  document.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'cfg') return; e.preventDefault();
+    const v = (id) => num($('#' + id).value), st = set();
+    const tiers = st.shopee.tiers.map((t, i) => ({ upTo: t.upTo >= 1e8 ? 1e9 : num(($('[data-tier="' + i + '"][data-tk="upTo"]') || {}).value), pct: num($('[data-tier="' + i + '"][data-tk="pct"]').value), fixed: num($('[data-tier="' + i + '"][data-tk="fixed"]').value) }));
+    await saveSettings({ kwh: v('a-kwh'), helperHour: v('a-help'), failPct: v('a-fail'), packaging: v('a-pack'), margin: v('a-margin'), defaultCpg: v('a-cpg'),
+      ml: { pct: v('ml-pct'), fixedUnder: v('ml-fix'), threshold: v('ml-thr'), freeShip: v('ml-ship') }, shopee: { tiers },
+      tiktok: { under: v('tt-under'), pctUnder: v('tt-pu'), fixedUnder: v('tt-fu'), pctOver: v('tt-po'), fixedOver: v('tt-fo'), shipPct: v('tt-sp'), shipCap: st.tiktok.shipCap, shipProgram: $('#tt-ship').checked },
+      instagram: { payPct: v('ig-pay'), fixed: v('ig-fix') }, site: { payPct: v('st-pay'), fixed: v('st-fix') }, vendedor: { payPct: v('vd-pay'), fixed: 0, commission: v('vd-comm') } });
+    toast('Ajustes salvos');
+  });
+
+  // ================= Diálogos =================
+  function openDlg(title, body, onSave) {
+    const d = $('#dlg'); d.classList.remove('wide');
+    dealCtx = null;
+    d.innerHTML = '<form method="dialog" id="dlg-form"><div class="dlg-head"><h2>' + title + '</h2><button type="button" class="x" id="dlg-x" aria-label="Fechar">✕</button></div>' + body + '<div class="row" style="justify-content:flex-end;margin-top:4px"><button type="button" class="btn" id="dlg-cancel">Cancelar</button><button type="submit" class="btn primary" id="dlg-ok">Salvar</button></div></form>';
+    const close = () => { d.close(); scheduleRender(); };
+    $('#dlg-x').onclick = close; $('#dlg-cancel').onclick = close;
+    $('#dlg-form').onsubmit = async (e) => {
+      e.preventDefault(); const b = $('#dlg-ok'); b.disabled = true;
+      try { const ok = await onSave(); if (ok !== false) close(); } catch (er) { } finally { b.disabled = false; }
+    };
+    d.showModal();
+    const first = d.querySelector('input:not([type=file]):not([type=color]), select'); if (first) first.focus();
+  }
+  function confirmDlg(title, text, okLabel) {
+    return new Promise((res) => {
+      const d = $('#dlg'); const wasOpen = d.open; const prev = wasOpen ? d.innerHTML : null;
+      const box = document.createElement('dialog'); document.body.appendChild(box);
+      box.innerHTML = '<form method="dialog" style="display:flex;flex-direction:column;gap:12px;padding:20px"><h2>' + esc(title) + '</h2>' + (text ? '<p class="hint" style="font-size:13px">' + esc(text) + '</p>' : '') + '<div class="row" style="justify-content:flex-end"><button class="btn" value="no">Cancelar</button><button class="btn primary" value="yes">' + esc(okLabel || 'Confirmar') + '</button></div></form>';
+      box.addEventListener('close', () => { res(box.returnValue === 'yes'); box.remove(); if (d.open) {} else scheduleRender(); });
+      box.showModal();
+    });
+  }
+
+  // ================= Ações =================
+  document.addEventListener('click', async (e) => {
+    const t = e.target.closest('button, a'); if (!t) return;
+    const ds = t.dataset;
+    if (ds.go) { e.preventDefault(); go(ds.go); return; }
+    if (ds.new === 'product') return productDialog();
+    if (ds.new === 'filament') return filamentDialog();
+    if (ds.new === 'purchase') return purchaseDialog();
+    if (ds.buy) return purchaseDialog(ds.buy, +ds.rolls || 1);
+    if (ds.adjust) return adjustDialog(ds.adjust);
+    if (ds.new === 'adjust') return adjustDialog();
+    if (ds.new === 'loss') return lossDialog();
+    if (ds.new === 'machine') return machineDialog();
+    if (ds.new === 'sale') return saleDialog();
+    if (ds.new === 'expense') return expenseDialog();
+    if (ds.new === 'order') return orderDialog(null, 'encomenda');
+    if (ds.new === 'lead') return orderDialog(null, 'lead');
+    if (ds.new === 'seller') return sellerDialog();
+    if (ds.editOrder) return orderDialog(byId('orders', ds.editOrder));
+    if (ds.editSeller) return sellerDialog(byId('sellers', ds.editSeller));
+    if (ds.ofilter) { orderFilter = ds.ofilter; render(); return; }
+    if (ds.deliver) { const o = byId('orders', ds.deliver); if (o && await confirmDlg('Marcar a encomenda de ' + o.client + ' como entregue?', 'A venda é lançada em Vendas com taxa do canal e comissão.', 'Entregar e lançar venda')) await deliverOrder(o); return; }
+    if (ds.msgOrder) { const o = byId('orders', ds.msgOrder); msgDraft = { text: msgDraft.text, orderId: ds.msgOrder, to: myRole() === 'producao' ? 'vendas' : myRole() === 'vendas' ? 'producao' : 'todos' }; go('mensagens'); setTimeout(() => { const t = $('#msg-text'); if (t) t.focus(); }, 50); return; }
+    if (t.id === 'msg-send') { const text = ($('#msg-text').value || '').trim(); if (!text) { toast('Escreva a mensagem'); return; } t.disabled = true; try { await saveDoc('messages', { authorId: ME.id, role: myRole(), to: $('#msg-to').value, orderId: $('#msg-order').value, text, createdAt: Date.now() }); msgDraft = { text: '', to: $('#msg-to').value, orderId: '' }; lastMsgSeen = Date.now(); saveSeen(); render(); } catch (er) { t.disabled = false; } return; }
+    if (ds.obrole) { obRole = ds.obrole; if (mode === 'login') { const keep = {}; ['l-nick', 'l-email', 'l-pass'].forEach((k) => { const x = $('#' + k); if (x) keep[k] = x.value; }); render(); Object.keys(keep).forEach((k) => { const x = $('#' + k); if (x) x.value = keep[k]; }); } else render(); return; }
+    if (ds.auth) { authView = ds.auth; render(); return; }
+    if (['l-login', 'l-signup', 'l-reset', 'l-newpass'].includes(t.id)) return authAction(t.id, t);
+    if (ds.logout || t.id === 'l-logout') return logout();
+    if (ds.install) { if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (er) {} installEvt = null; render(); } return; }
+    if (t.id === 'bk-export') return exportBackup();
+    if (t.id === 'bk-import') { const i = $('#bk-file'); if (i) i.click(); return; }
+    if (ds.mapprove) { const m = S.members.find((x) => x.id === ds.mapprove); if (m) { await saveDoc('members', Object.assign({}, m, { approved: true })); toast(personName(m.id) + ' aprovado(a)'); postAuto('todos', personName(m.id) + ' entrou na equipe (' + ROLES[m.role] + ').'); } return; }
+    if (t.id === 'ob-save') {
+      const nick = ($('#ob-nick').value || '').trim(); if (!nick) { toast('Diga como quer ser chamado(a)'); return; }
+      let sellerId = '';
+      if (obRole === 'vendas' && mode !== 'cloud') { const ex = S.sellers.find((x) => x.name.trim().toLowerCase() === nick.toLowerCase()); sellerId = ex ? ex.id : (await saveDoc('sellers', { name: nick, commission: num(set().vendedor.commission), contact: '', active: true })).id; }
+      await saveDoc('members', { id: ME.id, role: obRole, nick, sellerId, joinedAt: Date.now() });
+      if (mode !== 'cloud') await postAuto('todos', nick + ' entrou na equipe (' + ROLES[obRole] + ').');
+      view = obRole === 'vendas' ? 'encomendas' : 'avisos'; render(); return;
+    }
+    if (ds.mdel) { const m = S.members.find((x) => x.id === ds.mdel); if (m && await confirmDlg('Remover ' + personName(m.id) + ' da equipe?', 'A pessoa volta para a tela de escolher função. Para tirar o acesso de vez, remova também no menu Compartilhar.', 'Remover')) await delDoc('members', m.id); return; }
+    if (ds.orderPlan) { const o = byId('orders', ds.orderPlan); if (o) { const al = allocOrders()[o.id]; plan = al ? al.items.filter((x) => x.make > 0).map((x) => ({ productId: x.p.id, qty: x.make, colors: x.colors, orderId: o.id })) : []; if (!plan.length) plan = [{ productId: '', qty: 1 }]; go('producao'); toast(plan[0] && plan[0].productId ? 'Peças que faltam da encomenda de ' + o.client + ' no planejamento' : 'Esta encomenda já tem todas as peças prontas'); } return; }
+    if (ds.delOrder) { const o = byId('orders', ds.delOrder); if (o && await confirmDlg('Excluir a encomenda de ' + o.client + '?', o.billed ? 'As vendas já lançadas desta encomenda continuam em Vendas.' : '', 'Excluir')) await delDoc('orders', o.id); return; }
+    if (ds.paySeller) { const x = byId('sellers', ds.paySeller); const due = S.sales.filter((s) => s.sellerId === ds.paySeller && !s.commissionPaid); const tot = due.reduce((a, s) => a + num(s.commission), 0); if (x && due.length && await confirmDlg('Registrar pagamento de ' + brl(tot) + ' para ' + x.name + '?', due.length + ' venda(s) com comissão em aberto serão marcadas como pagas.', 'Registrar pagamento')) { for (const s of due) await saveDoc('sales', Object.assign({}, s, { commissionPaid: true, commissionPaidAt: today() })); toast('Pagamento de comissão registrado'); } return; }
+    if (ds.newTask) return taskDialog(null, ds.newTask);
+    if (ds.editProduct) return productDialog(byId('products', ds.editProduct));
+    if (ds.editFil) return filamentDialog(byId('filaments', ds.editFil));
+    if (ds.editMachine) return machineDialog(byId('machines', ds.editMachine));
+    if (ds.editTask) return taskDialog(byId('maintenance', ds.editTask));
+    if (ds.sell) return saleDialog(ds.sell);
+    if (ds.done) { const tk = byId('maintenance', ds.done); if (tk) { await saveDoc('maintenance', Object.assign({}, tk, { lastDate: today(), lastHours: Math.round(machineHours(tk.machineId) * 10) / 10 })); toast('Manutenção registrada'); } return; }
+    if (ds.delProduct) { const p = byId('products', ds.delProduct); if (p && await confirmDlg('Excluir "' + p.name + '"?', 'Vendas e produções antigas continuam no histórico.', 'Excluir')) { await delDoc('products', p.id); if (p.photoId && mode === 'cloud' && String(p.photoId).includes('/fotos/')) { try { await sb.storage.from('fotos').remove([decodeURIComponent(String(p.photoId).split('/fotos/')[1])]); } catch (er) {} } else if (p.photoId && assets && !/^(data:|https?:)/.test(String(p.photoId))) { try { await assets.delete(p.photoId); } catch (er) {} } } return; }
+    if (ds.delPur) { if (await confirmDlg('Excluir esta compra?', 'O estoque e o custo por grama serão recalculados.', 'Excluir')) await delDoc('purchases', ds.delPur); return; }
+    if (ds.delProd) { if (await confirmDlg('Excluir este registro de produção?', 'O filamento volta para o estoque.', 'Excluir')) await delDoc('productions', ds.delProd); return; }
+    if (ds.delSale) { if (await confirmDlg('Excluir esta venda?', '', 'Excluir')) await delDoc('sales', ds.delSale); return; }
+    if (ds.delExp) { if (await confirmDlg('Excluir esta despesa?', '', 'Excluir')) await delDoc('expenses', ds.delExp); return; }
+    if (t.id === 'plan-add') { plan.push({ productId: '', qty: 1 }); renderPlan(); return; }
+    if (ds.prm !== undefined) { plan.splice(+ds.prm, 1); if (!plan.length) plan.push({ productId: '', qty: 1 }); renderPlan(); return; }
+    if (t.id === 'plan-save') return savePlan();
+    if (t.id === 'cfg-reset') { if (await confirmDlg('Voltar aos valores padrão?', 'Energia, ajudante, margem e taxas dos canais voltam aos valores iniciais.', 'Voltar ao padrão')) { await saveSettings(JSON.parse(JSON.stringify(DEFAULT_SETTINGS))); toast('Valores padrão restaurados'); render(); } return; }
+  });
+
+  render();
+  boot();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
