@@ -142,12 +142,13 @@ As atualizações chegam sozinhas: quando você publica uma versão nova, ela va
 ## Estrutura
 
 ```
-index.html             o app inteiro (mesmo código da versão no Claude)
+index.html             o app inteiro, já com a configuração da nuvem e a biblioteca do Supabase dentro
 manifest.webmanifest   nome, ícone e cores do app instalado
 sw.js                  abre o app sem internet e mantém a versão nova
-js/config.js           ← endereço e chave do Supabase
-js/supabase.js         biblioteca do Supabase (2.118.0, incluída para funcionar offline)
-icons/                 ícones do app
+icon-*.png             ícones do app
+.nojekyll              avisa o GitHub Pages para publicar os arquivos como estão
 supabase/schema.sql    banco, regras de acesso, tempo real e fotos
-build.py               gera o index.html a partir do código-fonte (só para quem for programar)
+supabase/contas.sql    libera as contas Admin e Vendas
 ```
+
+Login por usuário: quem digita "Vendas" entra com a conta vendas@criatta.app. Contas criadas assim não recebem e-mail; para trocar a senha, use Authentication → Users no Supabase.
