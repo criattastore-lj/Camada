@@ -190,6 +190,32 @@ body.auth .side { display: none; }
 .login { margin-top: 8vh; } .login .logo { margin: 0; padding: 0; display: flex !important; }
 .onboard { max-width: 520px; margin: 40px auto; display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 860px) { .who { display: none; } }
+.cat-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.cat-tools .in { flex: 1 1 220px; width: auto; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; padding-bottom: 90px; }
+.cat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.cat-img { position: relative; aspect-ratio: 1 / 1; background: var(--surface-2); display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.cat-img img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+.cat-badge { position: absolute; left: 8px; top: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.cat-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.cat-name { font-size: 15px; font-weight: 600; line-height: 1.25; }
+.cat-price { font-family: var(--f-display); font-size: 24px; font-weight: 700; color: var(--ink); line-height: 1; }
+.cat-colors { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; min-height: 16px; font-size: 11px; color: var(--muted); }
+.cat-add { display: flex; gap: 8px; align-items: center; margin-top: auto; }
+.cat-add .btn { flex: 1; justify-content: center; min-height: 40px; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.stepper button { width: 36px; height: 40px; border: 0; background: var(--surface-2); font-size: 18px; font-weight: 600; }
+.stepper span { min-width: 30px; text-align: center; font-family: var(--f-mono); }
+.cat-card.in-cart { border-color: var(--accent); }
+.cart-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(760px, calc(100vw - 24px)); background: var(--ink); color: var(--bg); border-radius: 16px; padding: 10px 10px 10px 16px; display: flex; gap: 10px; align-items: center; z-index: 40; box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.cart-bar .cart-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.cart-bar .cart-txt small { opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-bar .cart-txt b { font-size: 16px; }
+.cart-bar .btn.ghost { color: var(--bg); opacity: .8; }
+body:has(.cart-bar) .toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+.cart-bar .cart-txt b { white-space: nowrap; }
+@media (max-width: 560px) { .cart-bar { padding: 8px 8px 8px 14px; gap: 6px; } .cart-bar .cart-txt small { display: none; } .cart-bar .btn.ghost { padding: 0 8px; } .cart-bar .btn.primary { padding: 0 12px; } }
+@media (max-width: 560px) { .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .cat-body { padding: 10px; } .cat-price { font-size: 20px; } .cat-add { flex-direction: column; align-items: stretch; } .stepper { justify-content: space-between; } .stepper button { width: 44px; } }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; z-index: 50; font-size: 13px; max-width: calc(100vw - 32px); }
 .banner { padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); font-size: 13px; }
 .mtask { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -831,7 +857,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function openPhoto(pid, ctx) {
     const p = byId('products', pid); if (!p || !p.photoId) return;
     ctx = ctx || {};
-    const st = set(), r = suggest(productCost(p).total, p.margin !== undefined && p.margin !== '' ? num(p.margin) : num(st.margin), 'direto', 0);
+    const st = set(), r = { price: vendorPrice(p, ctx.colors, ctx.sellerId) };
     const price = num(ctx.price) || (r ? r.price : 0), qty = Math.max(1, Math.floor(num(ctx.qty)) || 1);
     const cols = (p.filaments || []).length === 1 ? S.filaments.filter((g) => Math.max(0, filStats(g.id).stock) >= num(p.filaments[0].grams) * 2 || readyStock(p.id, null, g.id).free > 0).map((g) => g.color) : [];
     const msg = '*' + p.name + '*\n' + (price ? brl(price) + ' por unidade' : '') + (qty > 1 ? '\n' + qty + ' unidades: ' + brl(price * qty) : '') + (cols.length ? '\nCores disponíveis: ' + cols.join(', ') : '') + '\nPeça feita em impressão 3D.';
@@ -873,7 +899,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ================= Navegação e render =================
   const VIEWS = [
-    ['painel', 'Painel'], ['avisos', 'Avisos'], ['mensagens', 'Mensagens'], ['encomendas', 'Encomendas'], ['producao', 'Produção'], ['produtos', 'Produtos e preços'], ['filamentos', 'Filamentos'],
+    ['painel', 'Painel'], ['avisos', 'Avisos'], ['mensagens', 'Mensagens'], ['encomendas', 'Encomendas'], ['producao', 'Produção'], ['produtos', 'Catálogo'], ['filamentos', 'Filamentos'],
     ['maquinas', 'Máquinas'], ['vendas', 'Vendas'], ['vendedores', 'Vendedores'], ['despesas', 'Despesas'], ['equipe', 'Equipe'], ['ajustes', 'Ajustes']
   ];
   let view = 'painel';
@@ -918,7 +944,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!myRole()) { renderNav(); el.innerHTML = vOnboard(); return; }
     if (!allowed(view)) view = (ROLE_VIEWS[myRole()] || ['painel'])[0];
     liveCheck();
-    el.innerHTML = demoBar + ({ avisos: vAvisos, mensagens: vMensagens, equipe: vEquipe, painel: vPainel, producao: vProducao, produtos: vProdutos, filamentos: vFilamentos, maquinas: vMaquinas, vendas: vVendas, vendedores: vVendedores, encomendas: vEncomendas, despesas: vDespesas, ajustes: vAjustes })[view]();
+    el.innerHTML = demoBar + ({ avisos: vAvisos, mensagens: vMensagens, equipe: vEquipe, painel: vPainel, producao: vProducao, produtos: vCatalogo, filamentos: vFilamentos, maquinas: vMaquinas, vendas: vVendas, vendedores: vVendedores, encomendas: vEncomendas, despesas: vDespesas, ajustes: vAjustes })[view]();
     if (view === 'producao') renderPlan();
     if (view === 'avisos') { SEEN = {}; LIVE.ns.forEach((n) => (SEEN[n.key] = 1)); saveSeen(); }
     if (view === 'mensagens') { lastMsgSeen = Date.now(); saveSeen(); const m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight; }
@@ -1054,7 +1080,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const t = e.target;
     if (t.dataset && t.dataset.pi !== undefined) { plan[+t.dataset.pi][t.dataset.k] = t.dataset.k === 'qty' ? Math.max(0, Math.floor(num(t.value))) : t.value; if (t.dataset.k === 'productId') renderPlan(); else renderPlanResult(); }
   });
-  document.addEventListener('input', (e) => { const t = e.target; if (t.id === 'msg-text') msgDraft.text = t.value; });
+  document.addEventListener('input', (e) => { const t = e.target; if (t.id === 'msg-text') msgDraft.text = t.value; if (t.id === 'cat-q') { catQ = t.value; filterCat(); } });
+  document.addEventListener('change', (e) => { if (e.target.id === 'cat-ready') { catReady = e.target.checked; filterCat(); } });
+  function filterCat() { const q = catQ.trim().toLowerCase(); $$('.cat-card').forEach((c) => { c.hidden = (q && !c.dataset.name.includes(q)) || (catReady && c.dataset.ready !== '1'); }); }
   document.addEventListener('keydown', (e) => { if (e.key !== 'Enter' || mode !== 'login' || !e.target.closest || !e.target.closest('.login')) return; const b = $('#l-login, #l-signup, #l-reset, #l-newpass'); if (b) { e.preventDefault(); b.click(); } });
   document.addEventListener('change', (e) => { if (e.target.id === 'bk-file' && e.target.files[0]) { importBackup(e.target.files[0]); e.target.value = ''; } });
   document.addEventListener('change', (e) => {
@@ -1102,7 +1130,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ================= Produtos =================
   function vProdutos() {
     const st = set();
-    let h = head('Produtos e preços', 'Custo de cada peça e o preço sugerido por canal. A margem de lucro é editável por produto e conta sobre o preço de venda, já descontadas as taxas.', '<button class="btn primary" data-new="product">+ Novo produto</button>');
+    let h = head('Custos e preços por canal', 'Custo de cada peça e o preço sugerido por canal. A margem de lucro é editável por produto e conta sobre o preço de venda, já descontadas as taxas. Só a gestão vê esta tela.', '<button class="btn" data-catdetail="0">Voltar ao catálogo</button><button class="btn primary" data-new="product">+ Novo produto</button>');
     if (!S.filaments.length) h += '<div class="banner">Cadastre os filamentos primeiro: o custo de cada peça vem do preço por grama das suas compras.</div>';
     if (!S.products.length) return h + empty('Nenhum produto ainda', 'Cadastre a peça com foto, gramas de cada filamento e tempo de impressão (o fatiador mostra os dois).', '<button class="btn primary" data-new="product">Cadastrar o primeiro produto</button>');
     h += '<div class="prod-grid">' + S.products.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map((p) => {
@@ -1116,6 +1144,47 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }).join('') + '</div>';
     h += '<p class="hint">Taxas usadas: ML ' + n1(st.ml.pct) + '% + ' + brl(st.ml.fixedUnder) + ' abaixo de ' + brl(st.ml.threshold) + ' (acima, frete grátis estimado em ' + brl(st.ml.freeShip) + '); Shopee 20% + R$ 4,50 até R$ 79,99 e 14% + valor fixo acima; TikTok Shop ' + n1(st.tiktok.pctUnder) + '% + ' + brl(st.tiktok.fixedUnder) + ' abaixo de ' + brl(st.tiktok.under) + ', ' + n1(st.tiktok.pctOver) + '% + ' + brl(st.tiktok.fixedOver) + ' acima' + (st.tiktok.shipProgram ? ', mais ' + n1(st.tiktok.shipPct) + '% do programa de frete' : '') + '; Instagram ' + n1(st.instagram.payPct, 2) + '% de pagamento; site ' + n1(st.site.payPct, 2) + '% de pagamento; vendedor com comissão padrão de ' + n1(st.vendedor.commission, 1) + '% (cada vendedor tem a sua). Ajuste em <a href="#ajustes" data-go="ajustes">Ajustes</a>.</p>';
     return h;
+  }
+  // Preço de venda presencial / vendedor: canal Vendedor com a comissão do vendedor logado (ou a comissão padrão).
+  function vendorComm(sellerId) { const sid = sellerId !== undefined ? sellerId : ((myMember() || {}).sellerId || ''); return sid ? commOf(sid) : num(set().vendedor.commission); }
+  function vendorPrice(p, colors, sellerId) { const st = set(), m = p.margin !== undefined && p.margin !== '' ? num(p.margin) : num(st.margin); const r = suggest(productCost(p, colors).total, m, 'vendedor', vendorComm(sellerId)); return r ? r.price : 0; }
+  let CART = []; try { CART = JSON.parse(localStorage.getItem('camada_cart') || '[]') || []; } catch (e) { CART = []; }
+  const saveCart = () => { try { localStorage.setItem('camada_cart', JSON.stringify(CART)); } catch (e) {} };
+  let catQ = '', catReady = false, catDetail = false; const catQty = {};
+  function catColors(p) {
+    const f = p.filaments || []; if (!f.length) return '';
+    if (f.length === 1) {
+      const g = num(f[0].grams) * (1 + num(set().failPct) / 100), vars = readyByVar(p.id, null);
+      const list = S.filaments.filter((x) => filStats(x.id).stock >= g || (vars[x.id] && vars[x.id].free > 0));
+      return list.slice(0, 10).map((x) => '<span title="' + esc(x.color) + '">' + swatch(x) + '</span>').join('') + (list.length > 10 ? '<small>+' + (list.length - 10) + '</small>' : '');
+    }
+    return f.map((u) => { const x = byId('filaments', u.filamentId); return '<span title="' + esc((u.part ? u.part + ': ' : '') + (x ? x.color : '')) + '">' + swatch(x) + '</span>'; }).join('');
+  }
+  const cartCount = () => CART.reduce((a, i) => a + num(i.qty), 0);
+  const cartTotal = () => CART.reduce((a, i) => { const p = byId('products', i.productId); return a + (p ? vendorPrice(p, i.colors) * num(i.qty) : 0); }, 0);
+  function vCatalogo() {
+    const role = myRole(), canEdit = role !== 'vendas';
+    if (catDetail && role === 'gestao') return vProdutos();
+    CART = CART.filter((i) => byId('products', i.productId));
+    let h = head('Catálogo', 'Toque na foto para ampliar e enviar no WhatsApp. Os preços são os de venda presencial (vendedor).', (role === 'gestao' ? '<button class="btn" data-catdetail="1">Custos e preços por canal</button>' : '') + (canEdit ? '<button class="btn primary" data-new="product">+ Novo produto</button>' : ''));
+    if (!S.products.length) return h + empty('Nenhum produto no catálogo', canEdit ? 'Cadastre a peça com foto, cores e tempo de impressão.' : 'Peça para a gestão cadastrar os produtos.', canEdit ? '<button class="btn primary" data-new="product">Cadastrar o primeiro produto</button>' : '');
+    h += '<div class="cat-tools"><input class="in" id="cat-q" type="search" placeholder="Buscar produto" value="' + esc(catQ) + '" aria-label="Buscar produto"><label class="row" style="gap:6px;font-size:13px;flex-wrap:nowrap"><input type="checkbox" id="cat-ready"' + (catReady ? ' checked' : '') + ' style="width:18px;height:18px"> Só pronta entrega</label></div>';
+    h += '<div class="cat-grid">' + S.products.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map((p) => {
+      const ready = readyStock(p.id).free, inCart = CART.filter((i) => i.productId === p.id).reduce((a, i) => a + num(i.qty), 0), q = catQty[p.id] || 1;
+      const hide = (catQ && !p.name.toLowerCase().includes(catQ.toLowerCase())) || (catReady && ready <= 0);
+      return '<article class="cat-card' + (inCart ? ' in-cart' : '') + '" data-name="' + esc(p.name.toLowerCase()) + '" data-ready="' + (ready > 0 ? 1 : 0) + '"' + (hide ? ' hidden' : '') + '><div class="cat-img">' + (p.photoId ? photo(p) : '<span>sem foto</span>') + '<span class="pill ' + (ready > 0 ? 'good' : 'neutral') + ' cat-badge">' + (ready > 0 ? ready + ' pronta' + (ready > 1 ? 's' : '') : 'sob encomenda') + '</span></div>' +
+        '<div class="cat-body"><span class="cat-name">' + esc(p.name) + '</span><span class="cat-price">' + brl(vendorPrice(p)) + '</span><span class="cat-colors">' + catColors(p) + '</span>' +
+        '<div class="cat-add"><div class="stepper"><button type="button" data-cq="-1" data-pid="' + p.id + '" aria-label="Menos">−</button><span id="cq-' + p.id + '">' + q + '</span><button type="button" data-cq="1" data-pid="' + p.id + '" aria-label="Mais">+</button></div><button class="btn primary" data-cadd="' + p.id + '">Adicionar</button></div>' +
+        (inCart ? '<small class="hint">' + inCart + ' no carrinho</small>' : '') + (canEdit ? '<button class="btn sm ghost" style="align-self:flex-start;padding:0" data-edit-product="' + p.id + '">Editar produto</button>' : '') + '</div></article>';
+    }).join('') + '</div>';
+    if (CART.length) h += '<div class="cart-bar" role="region" aria-label="Carrinho"><div class="cart-txt"><b>' + cartCount() + ' ' + (cartCount() > 1 ? 'itens' : 'item') + ' · ' + brl(cartTotal()) + '</b><small>' + CART.map((i) => { const p = byId('products', i.productId); return num(i.qty) + '× ' + esc(p ? p.name : ''); }).join(', ') + '</small></div><button class="btn sm ghost" data-cclear="1">Limpar</button><button class="btn primary" data-ccheckout="1">Fechar pedido</button></div>';
+    return h;
+  }
+  function checkoutCart() {
+    if (!CART.length) return;
+    const items = CART.map((i) => ({ productId: i.productId, qty: num(i.qty), unitPrice: '', auto: true, colors: i.colors || {} }));
+    const short = dealPlan(items, null).lines.some((l) => l && l.make > 0);
+    dealDialog({ type: short ? 'encomenda' : 'venda', items, onSaved: () => { CART = []; saveCart(); } });
   }
   function productDialog(p) {
     p = p ? JSON.parse(JSON.stringify(p)) : { name: '', filaments: [{ filamentId: (S.filaments[0] || {}).id || '', grams: '' }], printMinutes: '', helperMinutes: '', packaging: '', otherCost: '', machineId: (S.machines[0] || {}).id || '', photoId: '' };
@@ -1343,10 +1412,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const src = opt.order ? JSON.parse(JSON.stringify(opt.order)) : null;
     const d = src || { client: '', phone: '', instagram: '', city: '', origin: 'Instagram', channel: 'instagram', sellerId: '', margin: '', payment: 'Pix', delivery: 'Retirada', date: today(), dueDate: '', deposit: '', shipping: '', notes: '', status: 'confirmada', items: [] };
     if (src && !d.phone && d.contact) d.phone = d.contact;
+    if (!src && opt.items && opt.items.length) d.items = opt.items.map((it) => Object.assign({ unitPrice: '', auto: true, colors: {} }, it));
     if (!d.items.length) d.items.push({ productId: opt.productId || '', qty: 1, unitPrice: '', auto: true, colors: {} });
     d.items.forEach((it) => { if (it.auto === undefined) it.auto = !src; if (!it.colors) it.colors = {}; });
     let type = opt.type || 'encomenda';
-    if (opt.type === 'venda' && !src) d.channel = 'direto';
+    if (!src) d.channel = 'vendedor';
     const mm = myMember(); if (!src && myRole() === 'vendas' && mm && mm.sellerId) { d.sellerId = mm.sellerId; d.channel = 'vendedor'; d.origin = 'Vendedor'; }
     const opts = (arr, sel) => arr.map((x) => '<option' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>').join('');
     const marginOf = (p) => String(d.margin).trim() !== '' ? num(d.margin) : (p.margin !== undefined && p.margin !== '' ? num(p.margin) : num(st.margin));
@@ -1374,7 +1444,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         const items = d.items.filter((it) => it.productId && num(it.qty) > 0).map((it) => ({ productId: it.productId, qty: Math.floor(num(it.qty)), unitPrice: num(it.unitPrice), colors: cleanColors(it) }));
         if (!items.length) { toast('Inclua ao menos um item'); return false; }
         if (items.some((it) => it.unitPrice <= 0)) { toast('Informe o preço de todos os itens'); return false; }
-        if (d.channel === 'vendedor' && !d.sellerId) { toast('Escolha o vendedor'); return false; }
+
         if (type !== 'venda' && !d.client) { toast('Informe o nome do cliente'); return false; }
         const info = { client: d.client, phone: d.phone, instagram: d.instagram, city: d.city, origin: d.origin, payment: d.payment, delivery: d.delivery, notes: d.notes };
         if (type === 'venda') {
@@ -1385,11 +1455,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             const fee = Math.round(feeAt(it.unitPrice, d.channel) * it.qty * 100) / 100, commission = Math.round(it.unitPrice * it.qty * comm) / 100, ship = shipLeft; shipLeft = 0;
             await saveDoc('sales', Object.assign({ productId: it.productId, channel: d.channel, sellerId: d.sellerId, qty: it.qty, unitPrice: it.unitPrice, fees: fee, commission, shipping: ship, net: Math.round((it.unitPrice * it.qty - fee - commission - ship) * 100) / 100, date: d.date || today(), colors: it.colors }, info));
           }
-          toast('Venda lançada'); return true;
+          toast('Venda lançada'); if (opt.onSaved) opt.onSaved(); return true;
         }
         const out = Object.assign({}, src || {}, info, { channel: d.channel, sellerId: d.sellerId, margin: String(d.margin).trim() === '' ? '' : num(d.margin), date: d.date || today(), dueDate: d.dueDate, deposit: num(d.deposit), shipping: num(d.shipping), items, status: type === 'lead' ? 'orcamento' : (d.status === 'orcamento' ? 'confirmada' : d.status), contact: d.phone || d.instagram });
         delete out.auto;
-        const saved = await saveDoc('orders', out); toast(type === 'lead' ? 'Lead salvo' : 'Encomenda salva');
+        const saved = await saveDoc('orders', out); toast(type === 'lead' ? 'Lead salvo' : 'Encomenda salva'); if (opt.onSaved) opt.onSaved();
         if (type === 'encomenda' && (!src || src.status === 'orcamento')) {
           const mk = dealPlan(items, saved.id).lines.reduce((a, l) => a + (l ? l.make : 0), 0), tot = items.reduce((a, it) => a + it.qty, 0);
           if (mk > 0) postAuto('producao', 'Nova encomenda de ' + d.client + ': produzir ' + mk + ' de ' + tot + ' peça(s)' + (d.dueDate ? ' até ' + fmtDate(d.dueDate) : '') + '.', saved.id);
@@ -1398,7 +1468,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         return true;
       });
     $('#dlg').classList.add('wide');
-    dealCtx = (i) => { read(); const it = d.items[i] || {}; return { price: it.unitPrice, qty: it.qty, phone: d.phone }; };
+    dealCtx = (i) => { read(); const it = d.items[i] || {}; return { price: it.auto ? '' : it.unitPrice, qty: it.qty, phone: d.phone, colors: it.colors, sellerId: d.sellerId }; };
     function cleanColors(it) { const o = {}; Object.keys(it.colors || {}).forEach((k) => { if (it.colors[k] && it.colors[k] !== k) o[k] = it.colors[k]; }); return o; }
     function read() {
       d.client = $('#d-client').value.trim(); d.phone = $('#d-phone').value.trim(); d.instagram = $('#d-ig').value.trim(); d.city = $('#d-city').value.trim(); d.origin = $('#d-origin').value;
@@ -1406,7 +1476,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       d.date = $('#d-date').value; d.dueDate = $('#d-due').value; d.deposit = $('#d-dep').value; d.shipping = $('#d-ship').value; d.notes = $('#d-notes').value.trim();
     }
     function autoPrices() {
-      const comm = commOf(d.sellerId);
+      const comm = d.channel === 'vendedor' ? vendorComm(d.sellerId) : commOf(d.sellerId);
       d.items.forEach((it, i) => {
         const p = byId('products', it.productId); if (!p || !it.auto) return;
         const r = suggest(productCost(p, it.colors).total, marginOf(p), d.channel, comm); it.unitPrice = r ? r.price : '';
@@ -1628,6 +1698,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (ds.paySeller) { const x = byId('sellers', ds.paySeller); const due = S.sales.filter((s) => s.sellerId === ds.paySeller && !s.commissionPaid); const tot = due.reduce((a, s) => a + num(s.commission), 0); if (x && due.length && await confirmDlg('Registrar pagamento de ' + brl(tot) + ' para ' + x.name + '?', due.length + ' venda(s) com comissão em aberto serão marcadas como pagas.', 'Registrar pagamento')) { for (const s of due) await saveDoc('sales', Object.assign({}, s, { commissionPaid: true, commissionPaidAt: today() })); toast('Pagamento de comissão registrado'); } return; }
     if (ds.newTask) return taskDialog(null, ds.newTask);
     if (ds.editProduct) return productDialog(byId('products', ds.editProduct));
+    if (ds.catdetail) { catDetail = ds.catdetail === '1'; render(); return; }
+    if (ds.cq) { const id = ds.pid; catQty[id] = Math.max(1, (catQty[id] || 1) + (+ds.cq)); const el = $('#cq-' + id); if (el) el.textContent = catQty[id]; return; }
+    if (ds.cadd) { const q = catQty[ds.cadd] || 1, ex = CART.find((i) => i.productId === ds.cadd && !Object.keys(i.colors || {}).length); if (ex) ex.qty = num(ex.qty) + q; else CART.push({ productId: ds.cadd, qty: q, colors: {} }); catQty[ds.cadd] = 1; saveCart(); const p = byId('products', ds.cadd); toast(q + '× ' + (p ? p.name : '') + ' no carrinho'); render(); return; }
+    if (ds.cclear) { CART = []; saveCart(); render(); return; }
+    if (ds.ccheckout) return checkoutCart();
     if (ds.editFil) return filamentDialog(byId('filaments', ds.editFil));
     if (ds.editMachine) return machineDialog(byId('machines', ds.editMachine));
     if (ds.editTask) return taskDialog(byId('maintenance', ds.editTask));
